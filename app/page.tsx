@@ -47,23 +47,38 @@ export default function HomePage() {
   const [selectedSpot, setSelectedSpot] = useState<SpotData | null>(null);
   const [isBidModalOpen, setIsBidModalOpen] = useState(false);
 
-  const loadAuctionData = useCallback(async () => {
+  const loadBoardData = useCallback(async () => {
     try {
-      const res = await fetch('/api/auction', { cache: 'no-store' });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.auction) {
-          setAuction(data.auction);
-          if (data.auction.spots && data.auction.spots.length > 0) {
-            setSpots(data.auction.spots);
-          }
-        }
-        if (data.stats) {
-          setLiveStats(data.stats);
-        }
+      const res = await fetch('/api/board', { cache: 'no-store' });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.board) {
+        setAuction(prev => ({
+          ...prev,
+          id: data.board.id,
+          status: data.board.status === 'PAUSED' ? 'CLOSED' : 'ACTIVE',
+          totalRaised: data.board.totalRaised ?? 0,
+        }));
+      }
+      if (data.spots?.length > 0) {
+        setSpots(data.spots.map((s: any) => ({
+          ...s,
+          brandName: s.brandName || null,
+          stickerStatus: s.status === 'OCCUPIED' ? 'ACTIVE' : 'PENDING',
+          clicksCount: s.clicksCount ?? 0,
+        })));
+      }
+      if (data.stats) {
+        setLiveStats((prev: any) => ({
+          ...prev,
+          totalSales: data.stats.totalRaised ?? 0,
+          occupiedCount: data.stats.occupiedSpots ?? 0,
+          totalSpots: data.stats.totalSpots ?? 10,
+          totalBidsCount: data.stats.totalBids ?? 0,
+        }));
       }
     } catch (e) {
-      console.warn('Could not fetch auction endpoint:', e);
+      console.warn('Could not fetch board:', e);
     }
   }, []);
 
@@ -76,41 +91,10 @@ export default function HomePage() {
       }
     } catch {}
 
-    loadAuctionData();
-
-    let eventSource: EventSource | null = null;
-    try {
-      eventSource = new EventSource('/api/auction/stream');
-      eventSource.onmessage = (event) => {
-        try {
-          const parsed = JSON.parse(event.data);
-          if (parsed.type === 'AUCTION_UPDATE' && parsed.auction) {
-            setAuction(parsed.auction);
-            if (parsed.auction.spots && parsed.auction.spots.length > 0) {
-              setSpots(parsed.auction.spots);
-            }
-          }
-          if (parsed.stats) {
-            setLiveStats(parsed.stats);
-          }
-        } catch {
-          // parse error
-        }
-      };
-      eventSource.onerror = () => {
-        eventSource?.close();
-      };
-    } catch {
-      // SSE fallback
-    }
-
-    const interval = setInterval(loadAuctionData, 5000);
-
-    return () => {
-      if (eventSource) eventSource.close();
-      clearInterval(interval);
-    };
-  }, [loadAuctionData]);
+    loadBoardData();
+    const interval = setInterval(loadBoardData, 5000);
+    return () => clearInterval(interval);
+  }, [loadBoardData]);
 
   const handleSpotSelect = (spot: SpotData) => {
     setSelectedSpot(spot);
