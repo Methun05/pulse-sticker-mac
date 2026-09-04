@@ -1,0 +1,8 @@
+{
+  "name": "pulse-sticker-mac",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ]
+}
