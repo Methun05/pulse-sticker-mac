@@ -88,13 +88,29 @@ export async function GET(request: NextRequest) {
       }, { status: 202 });
     }
 
+    // Collect tx hashes already claimed by other confirmed payments on this
+    // deposit address — prevents one transfer from confirming two payments.
+    const confirmedOnSameAddress = await db.payment.findMany({
+      where: {
+        depositAddress: payment.depositAddress,
+        status: 'CONFIRMED',
+        txHash: { not: null },
+        id: { not: payment.id },
+      },
+      select: { txHash: true },
+    });
+    const claimedTxHashes = new Set(
+      confirmedOnSameAddress.map(p => p.txHash!).filter(Boolean)
+    );
+
     const result = await verifyPayment(
       payment.chainId,
       payment.token,
       payment.depositAddress,
       payment.startBlock,
       payment.startBalance,
-      payment.tokenAmount
+      payment.tokenAmount,
+      claimedTxHashes
     );
 
     if (!result.confirmed) {

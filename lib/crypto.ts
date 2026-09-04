@@ -195,13 +195,18 @@ export async function verifyNativePayment(
 
 /**
  * Verify an ERC20 token payment (USDC, USDT, DAI) by scanning Transfer logs.
+ *
+ * Matching is a tight band (±0.5%) around the exact expected amount to prevent
+ * cross-matching between concurrent payments to the same deposit address.
+ * Already-claimed tx hashes are excluded so one transfer can't confirm two payments.
  */
 export async function verifyERC20Payment(
   chainId: number,
   token: string,
   depositAddress: string,
   startBlock: number,
-  totalDue: string
+  totalDue: string,
+  claimedTxHashes: Set<string> = new Set()
 ): Promise<VerificationResult> {
   const tokenConfig = TOKENS[token];
   if (!tokenConfig || tokenConfig.isNative) {
@@ -226,12 +231,16 @@ export async function verifyERC20Payment(
   });
 
   const totalDueBigInt = BigInt(totalDue);
-  // Allow a small tolerance: accept if within 1% or $0.01 (whichever is larger)
-  const tolerance = totalDueBigInt / 100n; // 1%
+  // Tight band: ±0.5% of expected amount (enough for minor rounding, too tight to cross-match)
+  const tolerance = totalDueBigInt / 200n; // 0.5%
   const minAcceptable = totalDueBigInt - (tolerance > 0n ? tolerance : 1n);
+  const maxAcceptable = totalDueBigInt + (tolerance > 0n ? tolerance : 1n);
 
   for (const log of logs) {
     try {
+      // Skip transfers already claimed by another confirmed payment
+      if (claimedTxHashes.has(log.transactionHash)) continue;
+
       const parsed = ERC20_TRANSFER_IFACE.parseLog({
         topics: log.topics as string[],
         data: log.data,
@@ -239,7 +248,8 @@ export async function verifyERC20Payment(
       if (!parsed) continue;
 
       const transferAmount = parsed.args[2] as bigint;
-      if (transferAmount >= minAcceptable) {
+      // Match within tight band — not just >= threshold
+      if (transferAmount >= minAcceptable && transferAmount <= maxAcceptable) {
         return {
           confirmed: true,
           txHash: log.transactionHash,
@@ -256,6 +266,8 @@ export async function verifyERC20Payment(
 
 /**
  * Verify any payment based on token type.
+ * claimedTxHashes: set of tx hashes already used by other confirmed payments
+ * on this deposit address — prevents one transfer from confirming two payments.
  */
 export async function verifyPayment(
   chainId: number,
@@ -263,7 +275,8 @@ export async function verifyPayment(
   depositAddress: string,
   startBlock: number,
   startBalance: string,
-  totalDue: string
+  totalDue: string,
+  claimedTxHashes: Set<string> = new Set()
 ): Promise<VerificationResult> {
   const tokenConfig = TOKENS[token];
   if (!tokenConfig) throw new Error(`Unknown token: ${token}`);
@@ -271,7 +284,7 @@ export async function verifyPayment(
   if (tokenConfig.isNative) {
     return verifyNativePayment(chainId, depositAddress, startBalance, totalDue);
   } else {
-    return verifyERC20Payment(chainId, token, depositAddress, startBlock, totalDue);
+    return verifyERC20Payment(chainId, token, depositAddress, startBlock, totalDue, claimedTxHashes);
   }
 }
 

@@ -6,6 +6,7 @@ import {
   NATIVE_TOKEN_CHAIN,
   getDepositAddresses,
   humanToBaseUnits,
+  baseUnitsToHuman,
   snapshotBlockchainState,
 } from '@/lib/crypto';
 
@@ -140,12 +141,41 @@ export async function POST(request: NextRequest) {
     }
     const depositAddress = addresses[minIdx];
 
-    // ── Convert amount to base units ─────────────────────────────────────
+    // ── Make amount unique to avoid cross-match between concurrent payments ──
 
-    // For stablecoins (USDC/USDT/DAI), amount = USD value directly
-    // For ETH/BNB, we'd need a price feed — for now, bidAmount IS the USD value
-    // and tokenAmount is the same (user sends exact token amount shown)
-    const tokenAmount = humanToBaseUnits(parsedAmount, token).toString();
+    // Query pending payments on this deposit address + token to find used amounts
+    const pendingPayments = await db.payment.findMany({
+      where: {
+        depositAddress: depositAddress.toLowerCase(),
+        token,
+        chainId: resolvedChainId,
+        status: { in: ['PENDING', 'CONFIRMING'] },
+      },
+      select: { tokenAmount: true },
+    });
+    const usedAmounts = new Set(pendingPayments.map(p => p.tokenAmount));
+
+    // Add a small random offset (0.01–0.99) to make amount unique per address.
+    // Try up to 100 times to find an unused amount.
+    let uniqueAmount = parsedAmount;
+    let tokenAmount: string;
+    let attempts = 0;
+    do {
+      // First attempt uses exact amount; subsequent attempts add random cents
+      if (attempts > 0) {
+        const centsOffset = Math.floor(Math.random() * 99) + 1; // 1–99
+        uniqueAmount = parsedAmount + centsOffset / 100;
+      }
+      tokenAmount = humanToBaseUnits(uniqueAmount, token).toString();
+      attempts++;
+    } while (usedAmounts.has(tokenAmount) && attempts < 100);
+
+    if (usedAmounts.has(tokenAmount)) {
+      return NextResponse.json(
+        { success: false, error: 'Too many concurrent payments to this address. Please retry.' },
+        { status: 429 }
+      );
+    }
 
     // ── Snapshot blockchain state ────────────────────────────────────────
 
@@ -191,11 +221,15 @@ export async function POST(request: NextRequest) {
       paymentId: payment.id,
       depositAddress,
       tokenAmount,
+      tokenAmountDisplay: baseUnitsToHuman(tokenAmount, token),
       token,
       chainId: resolvedChainId,
       chainName: CHAINS[resolvedChainId].name,
       usdAmount: parsedAmount,
       expiresAt: payment.expiresAt?.toISOString(),
+      note: uniqueAmount !== parsedAmount
+        ? `Send exactly ${baseUnitsToHuman(tokenAmount, token)} ${token} (includes unique identifier cents)`
+        : undefined,
     });
   } catch (error: unknown) {
     console.error('Error initiating payment:', error);
