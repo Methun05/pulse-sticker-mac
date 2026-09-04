@@ -1,6 +1,6 @@
 # PulseChain MacBook Sticker Board — Business Plan
 
-> Pay-to-rank leaderboard where PulseChain projects pay in PLS/DAI to get their logo stickered on a real MacBook. Higher payment = better placement. Physical proof + live leaderboard.
+> Pay-to-rank leaderboard where PulseChain projects pay in USDC, USDT, ETH, DAI, or BNB to get their logo stickered on a real MacBook. Higher payment = better placement. Physical proof + live leaderboard.
 
 ---
 
@@ -45,23 +45,51 @@ When rankings change, stickers get physically rearranged and a new photo is post
 
 ## 3. Payment
 
-- **Accepted**: PLS (PulseChain native token) or DAI on PulseChain
-- **Method**: Direct wallet-to-wallet transfer (wallet address displayed on site)
-- **Verification**: Manual — check on-chain tx, update leaderboard
-- **Gas cost for buyers**: Near zero (PulseChain gas is fractions of a cent)
-- **No middleman**: No Stripe, no payment processor, pure on-chain
+### Accepted Tokens (v1)
+- **USDC** (Ethereum, Base, Polygon)
+- **USDT** (Ethereum, Tron, BSC)
+- **ETH** (Ethereum mainnet)
+- **DAI** (Ethereum)
+- **BNB** (BSC)
 
-### Why PLS/DAI and not fiat?
-- Community-native — PulseChain projects already hold PLS
-- Zero payment friction — no KYC, no signups, no credit cards
-- On-chain transparency — every payment is publicly verifiable
-- Reinforces PulseChain ecosystem usage
+> PulseChain-native tokens (PLS, PLSX, HEX) deferred to Phase 2 — standard EVM tokens first for simplicity.
 
-### Future: Smart Contract (Phase 2)
-- Auto-rank updates when payment received
-- Refund logic if outbid (optional)
-- On-chain leaderboard state
-- This is NOT needed for launch — manual works fine for v1
+### Payment Infrastructure — $0 Cost
+
+**Based on**: [3aLaee/crypto-payment-gateway](https://github.com/3aLaee/crypto-payment-gateway) (open source, MIT)
+
+| Component | What | Cost |
+|-----------|------|------|
+| Payment API | Next.js API routes (drop-in from crypto-payment-gateway) | $0 — part of our Next.js app |
+| On-chain verification | Backend polls blockchain RPC to confirm tx | $0 — free public RPCs |
+| Database | Supabase (orders, payment status, leaderboard) | $0 — free tier (50K rows) |
+| Hosting | Vercel | $0 — hobby plan |
+| Payment provider fees | None — direct wallet-to-wallet | $0 |
+
+**How it works:**
+```
+1. User clicks "Bid $10" → POST /api/payment/initiate
+   → Returns deposit address + order ID
+
+2. User sends USDC/USDT/ETH to deposit address from any wallet
+
+3. Backend polls GET /api/payment/status?orderId=xxx
+   → Checks blockchain via RPC (Transfer event logs for ERC20, balance for native)
+   → When confirmed → marks "paid" in Supabase
+
+4. Leaderboard auto-updates from Supabase data
+```
+
+**Why not a payment provider?**
+- NOWPayments (0.5-1% fees, doesn't support PulseChain tokens for Phase 2)
+- Payram ($20-40/mo server cost)
+- Stripe Crypto (no PulseChain, limited tokens)
+- DIY is $0, runs on Vercel for free, and we have an open source template
+
+### Phase 2: Add PulseChain tokens
+- Add PulseChain RPC endpoint + PRC-20 token contract addresses
+- Same code pattern — just different RPC URL and chain ID
+- PLS, PLSX, HEX, pDAI, SOIL, PCOCK
 
 ---
 
@@ -189,12 +217,50 @@ Nobody has put these four things together.
 
 ## 8. What We Need to Build
 
+### Tech Stack
+
+| Layer | Technology | Source |
+|-------|-----------|--------|
+| Frontend | Next.js 14 + Tailwind CSS | Forked from [dpratyush02/brandmylaptop](https://github.com/dpratyush02/brandmylaptop) |
+| Payment API | Next.js API routes | Integrated from [3aLaee/crypto-payment-gateway](https://github.com/3aLaee/crypto-payment-gateway) |
+| Database | Supabase (Postgres) | Free tier |
+| Hosting | Vercel | Free tier |
+| Blockchain RPC | Public endpoints (Ethereum, BSC, etc.) | Free |
+
+### Open Source Building Blocks
+
+**1. Frontend — brandmylaptop fork** (dpratyush02/brandmylaptop)
+- Interactive laptop mockup with numbered sticker zones + live logo rendering
+- 72-hour auction system (we'll convert to ongoing pay-to-rank)
+- Admin dashboard for managing spots + fulfillment tracking
+- Dodo Payments integration (we'll replace with crypto-payment-gateway)
+- Next.js + TypeScript + Prisma + Tailwind
+- Vercel-ready deployment
+
+**2. Payment — crypto-payment-gateway** (3aLaee/crypto-payment-gateway)
+- Next.js API routes for initiating + verifying crypto payments
+- On-chain verification: polls blockchain, detects Transfer events for ERC20
+- Supabase integration for order tracking
+- Multi-currency: BTC, ETH, USDT/ERC20 (we'll add USDC, DAI, BNB)
+- Address rotation to avoid payment collisions
+- Zero UI — pure backend, drops into any Next.js app
+
+### What We Customize
+
+1. **Replace laptop mockup**: HP laptop → MacBook
+2. **Replace payment**: Dodo Payments → crypto-payment-gateway
+3. **Replace auction model**: 72-hour auction → ongoing pay-to-rank (outbid anytime)
+4. **Add tokens**: USDC, DAI, BNB alongside existing ETH/USDT
+5. **Add chains**: BSC, Base, Polygon RPC endpoints
+6. **Rebrand**: PulseChain community theme, dark mode, degen copy
+7. **Add photo gallery**: Real MacBook sticker photos section
+
 ### Website (v1 — MVP)
 
-- **One page**: Hero (MacBook photo/3D model) + Leaderboard + How to Bid + Wallet Address
-- **Stack**: Next.js + Tailwind (or plain HTML — keep it simple)
+- **One page**: Hero (MacBook mockup) + Leaderboard + How to Bid + Payment Flow
 - **Leaderboard**: Project name, logo, amount paid, rank, link
 - **Photo gallery**: Real photos of the MacBook with current stickers
+- **Admin panel**: Manage spots, verify payments, update fulfillment status
 - **Mobile responsive**: PulseChain community browses on mobile (Telegram links)
 
 ### Design Vibe
@@ -202,12 +268,12 @@ Nobody has put these four things together.
 - Clean, minimal — let the MacBook photo and leaderboard speak
 - Playful copy, degen energy, PulseChain community tone
 - NOT corporate — this is fun
+- Design reference: TBD — user will provide
 
-### Operations (Manual for v1)
-- Receive payment notification (watch wallet or check manually)
-- Verify tx on PulseChain explorer
-- Update leaderboard on site
-- Print sticker (if top 10), apply to MacBook, take photo, post on Twitter
+### Operations (Automated for v1)
+- Payment detection is automatic (crypto-payment-gateway polls blockchain)
+- Leaderboard updates automatically when payment confirmed in Supabase
+- Manual only: print sticker, apply to MacBook, take photo, post on Twitter
 
 ### Domain
 - TBD — deciding between options like sacrificemymac.lol, pulseboard.lol, etc.
