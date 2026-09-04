@@ -90,7 +90,14 @@ Frontend payment UX (once built): a connect-wallet flow (WalletConnect / wagmi) 
 
 ---
 
-## 6. Repo structure
+## 6. Implementation status
+
+- ✅ Backend scaffold (Express + TypeScript, JSON-file payment store, config/env wiring).
+- ✅ `backend/src/services/nowpayments/` — create-payment + IPN webhook (HMAC-SHA512 verified), built. Untested against a real NOWPayments account/API key — see code comments for assumptions that need a live smoke test (exact field names, IPN status strings, whether chain-suffixed currency tickers like `usdtbsc` are needed).
+- ✅ `backend/src/services/pulsechain/` — stateless single-transaction `/verify` endpoint, built. Will correctly refuse `pdai`/`usdc`/`usdt` verification until their contract addresses are filled into `.env` (see section 5's open item) — this is intentional, not a bug.
+- ⏳ Not started: frontend, leaderboard read API, connect-wallet-and-pay UX, real NOWPayments account, real receiving wallet address(es), managed PulseChain RPC provider (still defaults to the free public endpoint).
+
+## 7. Repo structure
 
 ```
 /
