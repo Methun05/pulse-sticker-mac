@@ -126,16 +126,11 @@ export function getProvider(chainId: number): JsonRpcProvider {
   const chain = CHAINS[chainId];
   if (!chain) throw new Error(`Unsupported chain: ${chainId}`);
 
-  try {
-    providers[chainId] = new JsonRpcProvider(chain.rpcUrl);
-  } catch {
-    if (chain.fallbackRpcUrl) {
-      providers[chainId] = new JsonRpcProvider(chain.fallbackRpcUrl);
-    } else {
-      throw new Error(`Failed to connect to RPC for chain ${chainId}`);
-    }
-  }
-
+  // Create provider with primary RPC. If it fails on first call,
+  // the caller should handle errors. Fallback RPC is used if primary
+  // is explicitly unavailable via env config.
+  const rpcUrl = chain.rpcUrl;
+  providers[chainId] = new JsonRpcProvider(rpcUrl);
   return providers[chainId];
 }
 

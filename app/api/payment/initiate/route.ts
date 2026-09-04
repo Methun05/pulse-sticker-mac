@@ -62,8 +62,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Phase 1: Only accept stablecoins (no price feed for ETH/BNB yet)
+    if (tokenConfig.isNative) {
+      return NextResponse.json(
+        { success: false, error: `${token} not supported yet (no price feed). Use USDC, USDT, or DAI.` },
+        { status: 400 }
+      );
+    }
+
     // For ERC20 tokens, verify the token is available on this chain
-    if (!tokenConfig.isNative && !tokenConfig.contractAddresses[resolvedChainId]) {
+    if (!tokenConfig.contractAddresses[resolvedChainId]) {
       return NextResponse.json(
         { success: false, error: `${token} is not available on ${CHAINS[resolvedChainId].name}` },
         { status: 400 }
@@ -92,9 +100,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Must outbid current holder
+    // Must outbid current holder by at least $1
     const minBid = spot.currentBid > 0
-      ? spot.currentBid + spot.startingPrice
+      ? spot.currentBid + 1
       : spot.startingPrice;
 
     if (parsedAmount < minBid) {

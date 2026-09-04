@@ -3,7 +3,7 @@ import { db } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin_brandmylaptop_2026';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin_pulse_sticker_2026';
 
 function isAuthorized(request: NextRequest): boolean {
   const authHeader = request.headers.get('authorization') || '';
@@ -37,7 +37,8 @@ export async function GET(request: NextRequest) {
       message: `Total views updated to ${config.pageViews}`,
       pageViews: config.pageViews,
     });
-  } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Error';
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

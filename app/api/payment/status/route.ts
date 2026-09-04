@@ -109,57 +109,59 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // ── Payment confirmed! Update everything ─────────────────────────────
+    // ── Payment confirmed! Update everything in a transaction ─────────────
 
-    // Update payment
-    await db.payment.update({
-      where: { id: payment.id },
-      data: {
-        status: 'CONFIRMED',
-        txHash: result.txHash || null,
-        confirmedAt: new Date(),
-      },
-    });
+    await db.$transaction(async (tx) => {
+      // Update payment
+      await tx.payment.update({
+        where: { id: payment.id },
+        data: {
+          status: 'CONFIRMED',
+          txHash: result.txHash || null,
+          confirmedAt: new Date(),
+        },
+      });
 
-    // Mark previous confirmed bids on this spot as OUTBID
-    await db.bid.updateMany({
-      where: {
-        spotId: payment.bid.spotId,
-        id: { not: payment.bidId },
-        status: 'CONFIRMED',
-      },
-      data: { status: 'OUTBID' },
-    });
+      // Mark previous confirmed bids on this spot as OUTBID
+      await tx.bid.updateMany({
+        where: {
+          spotId: payment.bid.spotId,
+          id: { not: payment.bidId },
+          status: 'CONFIRMED',
+        },
+        data: { status: 'OUTBID' },
+      });
 
-    // Confirm this bid
-    await db.bid.update({
-      where: { id: payment.bidId },
-      data: { status: 'CONFIRMED' },
-    });
+      // Confirm this bid
+      await tx.bid.update({
+        where: { id: payment.bidId },
+        data: { status: 'CONFIRMED' },
+      });
 
-    // Update spot with new highest bidder
-    await db.spot.update({
-      where: { id: payment.bid.spotId },
-      data: {
-        currentBid: payment.bid.amount,
-        currentBrandName: payment.bid.brandName,
-        currentLogoUrl: payment.bid.logoUrl,
-        currentWebsite: payment.bid.website,
-        currentWallet: payment.bid.walletAddress,
-        status: 'OCCUPIED',
-        bidCount: { increment: 1 },
-      },
-    });
+      // Update spot with new highest bidder
+      await tx.spot.update({
+        where: { id: payment.bid.spotId },
+        data: {
+          currentBid: payment.bid.amount,
+          currentBrandName: payment.bid.brandName,
+          currentLogoUrl: payment.bid.logoUrl,
+          currentWebsite: payment.bid.website,
+          currentWallet: payment.bid.walletAddress,
+          status: 'OCCUPIED',
+          bidCount: { increment: 1 },
+        },
+      });
 
-    // Recalculate total raised
-    const allSpots = await db.spot.findMany({
-      where: { boardId: payment.bid.spot.boardId },
-    });
-    const totalRaised = allSpots.reduce((sum, s) => sum + Math.max(s.currentBid, 0), 0);
+      // Recalculate total raised
+      const allSpots = await tx.spot.findMany({
+        where: { boardId: payment.bid.spot.boardId },
+      });
+      const totalRaised = allSpots.reduce((sum, s) => sum + Math.max(s.currentBid, 0), 0);
 
-    await db.board.update({
-      where: { id: payment.bid.spot.boardId },
-      data: { totalRaised },
+      await tx.board.update({
+        where: { id: payment.bid.spot.boardId },
+        data: { totalRaised },
+      });
     });
 
     console.log(
