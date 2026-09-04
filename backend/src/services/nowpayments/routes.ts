@@ -1,10 +1,12 @@
 import { Router } from "express";
+import { createPaymentHandler, ipnHandler } from "./controller";
 
 export const nowPaymentsRouter = Router();
 
-// TODO(nowpayments): POST /create-payment — create an invoice via the
-// NOWPayments API for a given bid (amount, token, project name).
-// TODO(nowpayments): POST /ipn — receive and verify NOWPayments' IPN
-// webhook (HMAC signature check against NOWPAYMENTS_IPN_SECRET), then
-// upsert a PaymentRecord via paymentStore.
-// See context/context.md section 3.1 / 4 for the reasoning.
+// Creates a NOWPayments invoice for a leaderboard bid and returns the
+// deposit address/amount for the frontend to display.
+nowPaymentsRouter.post("/create-payment", createPaymentHandler);
+
+// NOWPayments' IPN webhook — fires as the payment progresses/settles.
+// Verified via HMAC-SHA512 over the sorted JSON body (see ipnVerify.ts).
+nowPaymentsRouter.post("/ipn", ipnHandler);
