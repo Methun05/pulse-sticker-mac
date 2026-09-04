@@ -14,6 +14,18 @@ This document only covers the **payments architecture** and the reasoning that l
 
 ---
 
+## 1a. Phase 1 scope decision
+
+**Decision:** Phase 1 launch ignores PulseChain-native tokens entirely. We only accept popular EVM tokens — **USDC, USDT, BNB, ETH** — all via NOWPayments. PulseChain-native support (PLS sent directly, pDAI, PulseChain-bridged USDC/USDT) is **deferred to Phase 2**.
+
+**Why this is a reasonable simplification, not a compromise on the project's identity:** the hard, unresolved part of this whole payments effort was always the PulseChain-native token side (see section 3.2 — unconfirmed contract addresses, fork-copy/scam risk, no vendor support). Sidestepping it for launch removes the only genuinely open blocker (task: confirm PulseChain bridge contract addresses) and the only piece of custom verification code load-bearing for launch. Everything in Phase 1 now runs through a vendor (NOWPayments) that's fully self-serve-able (pending confirming their onboarding flow — see section 5).
+
+**What this means for the code already built:**
+- `backend/src/services/pulsechain/` (the stateless single-transaction verifier) is fully built and working, but **not wired into the Phase 1 launch flow**. It's kept, not deleted — it's the Phase 2 starting point once PulseChain-native token contract addresses are confirmed.
+- `backend/src/services/nowpayments/` is the only payment path Phase 1 depends on.
+
+---
+
 ## 2. Payments: the core problem
 
 We need to accept:
@@ -68,25 +80,30 @@ No persistent process. Nothing to crash or restart. Nothing to "catch up" on. Th
 
 ---
 
-## 4. Decision: hybrid payments architecture
+## 4. Decision: hybrid payments architecture (Phase 1 + Phase 2)
 
-| Payment | How it's verified | Built by |
-|---|---|---|
-| PLS, USDC/USDT/BNB on Ethereum/BSC/Solana/Polygon | NOWPayments (hosted invoice + IPN webhook) | Vendor (NOWPayments) — thin integration only |
-| PulseChain-native tokens (pDAI, PulseChain-bridged USDC/USDT once contract addresses are confirmed) | Our own stateless, single-transaction verifier, backed by a managed RPC (Moralis) | Us |
+| Payment | How it's verified | Built by | Phase |
+|---|---|---|---|
+| USDC / USDT / BNB / ETH on Ethereum/BSC/Solana/Polygon | NOWPayments (hosted invoice + IPN webhook) | Vendor (NOWPayments) — thin integration only | **Phase 1 (launch)** |
+| PLS, PulseChain-native tokens (pDAI, PulseChain-bridged USDC/USDT once contract addresses are confirmed) | Our own stateless, single-transaction verifier, backed by a managed RPC (Moralis) | Us | Phase 2 (deferred — see 1a) |
 
-Frontend payment UX (once built): a connect-wallet flow (WalletConnect / wagmi) lets a buyer connect any wallet, pick token + chain (adding PulseChain as a custom EVM network — chain ID 369, RPC via a managed provider), and send the payment in one click. The returned transaction hash feeds directly into the stateless verifier above. WalletConnect itself does **not** verify anything — it's only the "connect and sign" UX layer; the backend still independently re-verifies every transaction before trusting it.
+Frontend payment UX (once built): for Phase 1, a connect-wallet flow (WalletConnect / wagmi) or a NOWPayments-hosted checkout lets a buyer pay in USDC/USDT/BNB/ETH; NOWPayments' IPN webhook confirms it automatically. Phase 2 adds PulseChain as a custom EVM network (chain ID 369) to the same connect-wallet flow, with the returned transaction hash feeding the stateless verifier. WalletConnect itself does **not** verify anything in either phase — it's only the "connect and sign" UX layer; the backend still independently re-verifies every transaction before trusting it.
 
 ---
 
 ## 5. Open items / not yet decided
 
-- [ ] **Confirm real, legitimate contract addresses** for PulseChain-native USDC, USDT, and pDAI via the official PulseChain bridge — required before the PulseChain verifier can go live for those tokens. Do not hardcode a guessed address.
-- [ ] NOWPayments merchant account + API key (business/ops action).
-- [ ] Receiving wallet address(es) — one per chain, or one EVM address reused across all EVM chains (PulseChain/ETH/BSC/Polygon can share an address since they're all EVM; Solana needs its own).
+**Phase 1 blockers (need these to launch):**
+- [ ] NOWPayments merchant account + API key (business/ops action). Founder reported the NOWPayments site pointed to contacting them rather than pure self-serve signup — need to find out exactly what step triggered that (account verification? enabling specific currencies?) before we know if Phase 1 is actually self-serve or needs a sales conversation.
+- [ ] Receiving wallet address(es) for NOWPayments payouts.
 - [ ] Persistent storage choice for leaderboard/payment records (currently a simple JSON-file store as a v1 placeholder — swap for a real DB when it matters).
-- [ ] Frontend: not started yet, intentionally deferred until backend payment flows are solid. Folder scaffolded and reserved.
+- [ ] Frontend: not started yet, intentionally deferred until backend payment flow is solid. Folder scaffolded and reserved.
 - [ ] Domain name (candidates listed in `BUSINESS_PLAN.md`).
+- [ ] Smoke-test `backend/src/services/nowpayments/` against a real API key — see section 6, this code is unverified against the live API.
+
+**Phase 2 (deferred, not blocking launch):**
+- [ ] Confirm real, legitimate contract addresses for PulseChain-native USDC, USDT, and pDAI via the official PulseChain bridge — required before the PulseChain verifier can go live for those tokens. Do not hardcode a guessed address.
+- [ ] Managed PulseChain RPC provider (Moralis) — the verifier currently defaults to the free public endpoint.
 
 ---
 
