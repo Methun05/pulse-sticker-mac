@@ -2,54 +2,70 @@
 
 import React, { useState } from 'react';
 
-export const FAQSection: React.FC = () => {
-  const [openIndex, setOpenIndex] = useState<number | null>(0);
+const FAQS = [
+  {
+    q: 'Is this real?',
+    a: 'Yes. This is a real MacBook with 10 physical sticker spots. When you win a spot, your brand logo is printed and physically placed on the laptop lid.',
+  },
+  {
+    q: 'What does buying a spot get me?',
+    a: 'Your brand logo printed as a sticker on the MacBook lid, plus a clickable link on this website. The laptop is carried to meetups, coworking spaces, and events in the PulseChain community.',
+  },
+  {
+    q: 'How does payment work?',
+    a: 'You send stablecoins (USDC, USDT, or DAI) to a deposit address. The payment is verified on-chain automatically. Supported chains: Ethereum, Base, BSC, Polygon, and PulseChain.',
+  },
+  {
+    q: 'Can I be outbid?',
+    a: 'Yes. This is an ongoing leaderboard, not a timed auction. Anyone can outbid you at any time by paying more. When outbid, your sticker is replaced with the new highest bidder\'s logo.',
+  },
+  {
+    q: 'What happens to my payment if I get outbid?',
+    a: 'Payments are non-refundable. Your brand had visibility on the laptop for the period you held the spot. Think of it as advertising — you paid for the time your sticker was live.',
+  },
+  {
+    q: 'What tokens and chains are supported?',
+    a: 'USDC, USDT, and DAI on Ethereum, Base, BSC, Polygon, and PulseChain. Native tokens (ETH, BNB) will be added in a future update.',
+  },
+  {
+    q: 'How long does payment verification take?',
+    a: 'Usually under 2 minutes. The system checks the blockchain for your transfer every few seconds. You have a 30-minute window to complete the payment.',
+  },
+];
 
-  const faqs = [
-    { q: 'How long is the auction?', a: '72 hours.' },
-    {
-      q: "What happens if I'm outbid?",
-      a: 'You can bid again while the auction is live.',
-    },
-    {
-      q: 'When does my logo appear?',
-      a: 'Once your paid bid is confirmed and becomes the highest bid.',
-    },
-    {
-      q: 'When does the sticker go on the laptop?',
-      a: 'The winning sticker is installed within 72 hours after the auction closes.',
-    },
-    {
-      q: 'What currency can I use?',
-      a: 'USD.',
-    },
-  ];
+export function FAQSection() {
+  const [openIdx, setOpenIdx] = useState<number | null>(null);
 
   return (
-    <section id="faq" className="py-10 sm:py-14">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        <h2 className="text-2xl sm:text-3xl font-medium tracking-tight text-white mb-8">FAQ</h2>
-        <div className="border-t border-[#1a1a1a]">
-          {faqs.map((faq, index) => {
-            const isOpen = openIndex === index;
-            return (
-              <div key={faq.q} className="border-b border-[#1a1a1a]">
-                <button
-                  type="button"
-                  onClick={() => setOpenIndex(isOpen ? null : index)}
-                  className="w-full py-4 text-left flex items-center justify-between gap-4 text-[15px] text-white"
+    <section id="faq" className="py-16 sm:py-20 px-4 sm:px-6">
+      <div className="max-w-2xl mx-auto">
+        <h2 className="text-center text-[clamp(1.25rem,3vw,1.75rem)] font-bold tracking-[-0.03em] text-[var(--ink)] mb-10">
+          Questions
+        </h2>
+
+        <div className="divide-y divide-[var(--hairline)]">
+          {FAQS.map((faq, i) => (
+            <div key={i}>
+              <button
+                onClick={() => setOpenIdx(openIdx === i ? null : i)}
+                className="w-full flex items-center justify-between py-4 text-left"
+              >
+                <span className="text-[15px] font-medium text-[var(--ink)] pr-4">{faq.q}</span>
+                <span className="text-[20px] text-[var(--ink-3)] flex-shrink-0 transition-transform duration-200"
+                  style={{ transform: openIdx === i ? 'rotate(45deg)' : 'none' }}
                 >
-                  <span>{faq.q}</span>
-                  <span className="text-[#6d6d68] text-lg leading-none">{isOpen ? '–' : '+'}</span>
-                </button>
-                {isOpen && (
-                  <p className="pb-4 text-sm text-[#8a8a84] -mt-1">{faq.a}</p>
-                )}
+                  +
+                </span>
+              </button>
+              <div className={`faq-answer ${openIdx === i ? 'open' : ''}`}>
+                <div>
+                  <p className="pb-4 text-[14px] text-[var(--ink-2)] leading-relaxed">{faq.a}</p>
+                </div>
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
       </div>
     </section>
   );
-};
+}

@@ -1,68 +1,41 @@
 import type { Metadata } from "next";
-import { Instrument_Sans, JetBrains_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
-import { CurrencyProvider } from "@/components/currency/CurrencyProvider";
 import { Analytics } from "@vercel/analytics/react";
 
-const instrumentSans = Instrument_Sans({
-  variable: "--font-sans",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-mono",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3005'),
-  title: "BrandMyLaptop — Your Brand. On My Laptop.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
+  title: "PulseSticker — Get Your Brand on My MacBook",
   description:
-    "Bid for one of 10 advertising spots on my HP laptop. Live auction for 72 hours. Your logo goes live online while you're the highest bidder.",
+    "10 sticker spots on a MacBook lid. Pay crypto to claim yours. Outbid anytime. The PulseChain community leaderboard.",
   keywords: [
-    "BrandMyLaptop",
-    "laptop advertising",
-    "sticker advertising",
-    "startup sponsorship",
-    "HP laptop auction",
-    "72-hour auction",
+    "PulseChain",
+    "MacBook sticker",
+    "crypto advertising",
+    "sticker spots",
+    "pay to rank",
+    "leaderboard",
   ],
-  authors: [{ name: "BrandMyLaptop" }],
-  creator: "BrandMyLaptop",
   openGraph: {
-    title: "BrandMyLaptop — Your Brand. On My Laptop.",
+    title: "PulseSticker — Get Your Brand on My MacBook",
     description:
-      "10 physical ad spots on my HP laptop lid. 72-hour live auction. Your logo goes live online when you bid. Highest bidder gets the physical spot.",
-    url: "https://brandmylaptop.space",
-    siteName: "BrandMyLaptop",
-    images: [
-      {
-        url: "/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "BrandMyLaptop — HP Laptop Advertising Auction",
-      },
-    ],
+      "10 sticker spots on a MacBook lid. Pay crypto to claim yours. Outbid anytime.",
+    url: process.env.NEXT_PUBLIC_SITE_URL || 'https://pulse-sticker-mac.vercel.app',
+    siteName: "PulseSticker",
     locale: "en_US",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "BrandMyLaptop — Your Brand. On My Laptop.",
+    title: "PulseSticker — Get Your Brand on My MacBook",
     description:
-      "Bid for one of 10 advertising spots on my HP laptop. 72-hour live auction. Highest bidder gets the spot on my laptop.",
-    images: ["/og-image.png"],
-  },
-  icons: {
-    icon: [
-      { url: '/favicon.svg', type: 'image/svg+xml' },
-      { url: '/favicon.ico', sizes: 'any' },
-    ],
-    apple: [
-      { url: '/apple-icon', sizes: '180x180', type: 'image/png' },
-    ],
+      "10 sticker spots. Pay crypto. Outbid anytime. PulseChain community leaderboard.",
   },
 };
 
@@ -72,9 +45,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${instrumentSans.variable} ${jetbrainsMono.variable} dark scroll-smooth`}>
-      <body className="bg-black text-[#f3f3ee] font-sans antialiased min-h-screen">
-        <CurrencyProvider>{children}</CurrencyProvider>
+    <html lang="en" className={`${inter.variable} scroll-smooth`}>
+      <body className="bg-white text-[#1d1d1f] font-[var(--font-inter),system-ui,-apple-system,sans-serif] antialiased min-h-screen">
+        {children}
         <Analytics />
       </body>
     </html>

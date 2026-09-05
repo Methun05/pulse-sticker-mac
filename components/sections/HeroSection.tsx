@@ -4,47 +4,59 @@ import React from 'react';
 
 interface HeroSectionProps {
   onBidClick: () => void;
-  onExploreAuction: () => void;
+  onExploreSpots: () => void;
+  totalRaised: number;
+  occupiedCount: number;
 }
 
-export const HeroSection: React.FC<HeroSectionProps> = ({
-  onBidClick,
-  onExploreAuction,
-}) => {
+export function HeroSection({ onBidClick, onExploreSpots, totalRaised, occupiedCount }: HeroSectionProps) {
   return (
-    <section className="pt-10 sm:pt-16 pb-4 sm:pb-6 px-4 sm:px-6">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-[2.6rem] leading-[0.95] sm:text-7xl md:text-8xl font-medium tracking-tight text-white">
-          Your brand.
-          <br />
-          <span className="text-[#c8f542]">On my laptop.</span>
+    <section className="pt-16 sm:pt-24 pb-10 px-4 sm:px-6 text-center">
+      <div className="max-w-2xl mx-auto">
+        {/* Social proof pill */}
+        {totalRaised > 0 && (
+          <div className="inline-flex items-center gap-2 rounded-full border border-[var(--hairline)] px-3 py-1.5 text-[13px] text-[var(--ink-2)] mb-6">
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--green)]" />
+            ${totalRaised.toLocaleString()} raised across {occupiedCount} spot{occupiedCount !== 1 ? 's' : ''}
+          </div>
+        )}
+
+        {/* Headline */}
+        <h1 className="text-[clamp(1.75rem,5vw,3rem)] font-bold tracking-[-0.04em] leading-[1.1] text-[var(--ink)]">
+          Get your brand on this MacBook.
         </h1>
 
-        <p className="mt-5 text-base sm:text-xl text-[#c8c8c0] tracking-tight">
-          10 spots. 72 hours. One very visible laptop.
+        {/* Subtext */}
+        <p className="mt-4 text-[15px] sm:text-[17px] text-[var(--ink-2)] leading-relaxed max-w-[46ch] mx-auto">
+          10 sticker spots on a real MacBook lid. Pay crypto to claim yours.
+          Anyone can outbid you anytime — highest bidder holds the spot.
         </p>
 
-        <p className="mt-3 max-w-xl text-sm sm:text-[15px] text-[#8a8a84] leading-relaxed">
-          Bid for a spot. Your logo goes live here instantly. Highest bidder gets the sticker on my HP laptop.
-        </p>
-
-        <div className="mt-7 flex flex-wrap items-center gap-3">
+        {/* CTAs */}
+        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
           <button
-            type="button"
             onClick={onBidClick}
-            className="px-5 py-2.5 bg-[#c8f542] hover:bg-[#d6ff63] text-[#111] text-sm font-semibold tracking-tight transition"
+            className="rounded-full bg-[var(--blue)] hover:bg-[var(--blue-hover)] text-white px-6 py-3 text-[15px] font-medium transition-colors w-full sm:w-auto"
           >
-            Bid for a spot →
+            Claim a spot
           </button>
           <button
-            type="button"
-            onClick={onExploreAuction}
-            className="px-5 py-2.5 text-sm text-[#c8c8c0] hover:text-white transition"
+            onClick={onExploreSpots}
+            className="rounded-full border border-[var(--hairline)] hover:border-[var(--ink-3)] px-6 py-3 text-[15px] font-medium transition-colors w-full sm:w-auto"
           >
-            See the spots
+            Explore spots
           </button>
+        </div>
+
+        {/* Token badges */}
+        <div className="mt-6 flex items-center justify-center gap-2 text-[12px] text-[var(--ink-3)]">
+          <span>Accepts:</span>
+          {['USDC', 'USDT', 'DAI'].map(t => (
+            <span key={t} className="px-2 py-0.5 rounded-full bg-[var(--surface)] font-medium">{t}</span>
+          ))}
+          <span className="px-2 py-0.5 rounded-full bg-[var(--surface)] font-medium">5 chains</span>
         </div>
       </div>
     </section>
   );
-};
+}
