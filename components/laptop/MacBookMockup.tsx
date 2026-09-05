@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 
 export interface SpotData {
   id: string;
@@ -17,26 +17,35 @@ export interface SpotData {
   clicksCount: number;
 }
 
-// 6-col × 3-row grid matching brandmylaptop's layout
-// Each spot has col/row/colSpan positioning + physical dimensions
-const SPOT_LAYOUT: Record<number, { col: number; row: number; colSpan: number; sizeLabel: string; dims: string }> = {
-  1:  { col: 1, row: 1, colSpan: 2, sizeLabel: 'L',  dims: '9.5 × 5.5 cm' },
-  2:  { col: 3, row: 1, colSpan: 2, sizeLabel: 'L',  dims: '9.5 × 5.5 cm' },
-  3:  { col: 5, row: 1, colSpan: 2, sizeLabel: 'L',  dims: '9.5 × 5.5 cm' },
-  4:  { col: 1, row: 2, colSpan: 1, sizeLabel: 'S',  dims: '4.5 × 4.5 cm' },
-  5:  { col: 2, row: 2, colSpan: 1, sizeLabel: 'S',  dims: '4.5 × 4.5 cm' },
-  6:  { col: 3, row: 2, colSpan: 2, sizeLabel: 'L',  dims: '6.0 × 6.0 cm' },
-  7:  { col: 5, row: 2, colSpan: 1, sizeLabel: 'S',  dims: '4.5 × 4.5 cm' },
-  8:  { col: 6, row: 2, colSpan: 1, sizeLabel: 'S',  dims: '4.5 × 4.5 cm' },
-  9:  { col: 1, row: 3, colSpan: 3, sizeLabel: 'M',  dims: '14.5 × 4.0 cm' },
-  10: { col: 4, row: 3, colSpan: 3, sizeLabel: 'M',  dims: '14.5 × 4.0 cm' },
+// ── Exact layout from brandmylaptop: 6-col × 3-row grid ──
+const SPOT_LAYOUT: Record<
+  number,
+  { col: number; row: number; colSpan: number; sizeLabel: string; dims: string }
+> = {
+  1:  { col: 1, row: 1, colSpan: 2, sizeLabel: 'LARGE',  dims: '9.5 × 5.5 cm' },
+  2:  { col: 3, row: 1, colSpan: 2, sizeLabel: 'LARGE',  dims: '9.5 × 5.5 cm' },
+  3:  { col: 5, row: 1, colSpan: 2, sizeLabel: 'LARGE',  dims: '9.5 × 5.5 cm' },
+  4:  { col: 1, row: 2, colSpan: 1, sizeLabel: 'SMALL',  dims: '4.5 × 4.5 cm' },
+  5:  { col: 2, row: 2, colSpan: 1, sizeLabel: 'SMALL',  dims: '4.5 × 4.5 cm' },
+  6:  { col: 5, row: 2, colSpan: 1, sizeLabel: 'SMALL',  dims: '4.5 × 4.5 cm' },
+  7:  { col: 6, row: 2, colSpan: 1, sizeLabel: 'SMALL',  dims: '4.5 × 4.5 cm' },
+  8:  { col: 1, row: 3, colSpan: 2, sizeLabel: 'MEDIUM', dims: '9.5 × 4.0 cm' },
+  9:  { col: 3, row: 3, colSpan: 2, sizeLabel: 'MEDIUM', dims: '9.5 × 4.0 cm' },
+  10: { col: 5, row: 3, colSpan: 2, sizeLabel: 'MEDIUM', dims: '9.5 × 4.0 cm' },
 };
 
-const SIZE_COLORS: Record<string, string> = {
-  L: 'text-[#0071e3]',
-  M: 'text-[#d97706]',
-  S: 'text-[#86868b]',
-};
+// ── Exact lid finish colors from brandmylaptop CSS vars ──
+// Silver finish: --lid-1:#ececed  --lid-2:#dcdcdf  --lid-3:#c8c8cd
+const LID_STOPS = ['#ececed', '#dcdcdf', '#c8c8cd'];
+
+// Apple logo SVG (exact path from brandmylaptop source)
+function AppleLogo({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 32 39" className={className} fill="currentColor">
+      <path d="M22.152 0c.28 2.074-.602 4.109-1.835 5.643-1.266 1.498-3.37 2.66-5.392 2.507-.324-1.89.715-3.903 1.9-5.325C18.11 1.273 20.366.145 22.152 0zM28.56 28.506c-.79 1.73-1.17 2.502-2.19 4.042-1.422 2.148-3.426 4.82-5.908 4.843-2.204.023-2.77-1.434-5.76-1.413-2.988.018-3.613 1.44-5.82 1.42-2.48-.024-4.378-2.442-5.8-4.59C-.26 28.06-1.043 21.78 1.47 18.373 3.27 15.93 5.942 14.47 8.43 14.47c2.459 0 4.004 1.44 6.038 1.44 1.973 0 3.176-1.443 6.022-1.443 2.213 0 4.587 1.204 6.384 3.283-5.608 3.074-4.698 11.08.686 12.756z" />
+    </svg>
+  );
+}
 
 interface MacBookMockupProps {
   spots: SpotData[];
@@ -44,116 +53,138 @@ interface MacBookMockupProps {
 }
 
 export function MacBookMockup({ spots, onSelectSpot }: MacBookMockupProps) {
+  const lidRef = useRef<HTMLDivElement>(null);
+
+  // ── Responsive --lidw variable (exact from brandmylaptop) ──
+  useEffect(() => {
+    const el = lidRef.current;
+    if (!el) return;
+    const sync = () =>
+      el.style.setProperty('--lidw', `${el.getBoundingClientRect().width}px`);
+    sync();
+    const ro = new ResizeObserver(sync);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // Is center (Apple logo area) occupied?
+  const centerOccupied = spots.some(
+    (s) => s.number >= 5 && s.number <= 6 && s.currentBid > 0 && s.brandName
+  );
+
   return (
-    <div className="max-w-[640px] mx-auto px-4" style={{ containerType: 'inline-size' }}>
-      {/* === Lid === */}
+    <div className="mx-auto w-full max-w-[860px]" style={{ containerType: 'inline-size' }}>
+      {/* ═══ Lid ═══ */}
       <div
-        className="relative rounded-t-[12px] overflow-hidden"
+        ref={lidRef}
+        className="relative w-full"
         style={{
           aspectRatio: '1.44',
-          background: 'linear-gradient(180deg, #e8e8ed 0%, #d8d8dd 40%, #c8c8cd 100%)',
-          boxShadow: '0 1px 8px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.6)',
+          borderRadius: 'calc(var(--lidw, 100cqw) * 0.026)',
+          padding: 'calc(var(--lidw, 100cqw) * 0.012)',
+          background: `linear-gradient(172deg, ${LID_STOPS[0]} 0%, ${LID_STOPS[1]} 45%, ${LID_STOPS[2]} 100%)`,
+          boxShadow:
+            'inset 0 1px 0 rgba(255,255,255,0.9), inset 0 -1px 0 rgba(0,0,0,0.18), 0 30px 60px -18px rgba(0,0,0,0.28), 0 12px 24px -12px rgba(0,0,0,0.18)',
+          overflow: 'hidden',
         }}
       >
-        {/* Bezel */}
-        <div className="absolute inset-[3%] rounded-[6px] overflow-hidden"
+        {/* ── Specular highlight overlay (the subtle shine) ── */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0"
           style={{
-            background: 'linear-gradient(180deg, #ededf0 0%, #dddde2 50%, #cdcdd3 100%)',
+            borderRadius: 'inherit',
+            background:
+              'radial-gradient(120% 90% at 30% 0%, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.12) 42%, transparent 70%)',
+          }}
+        />
+
+        {/* ── Apple logo (shown when center spots are empty) ── */}
+        {!centerOccupied && (
+          <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
+            <div className="w-[15.6%]">
+              <AppleLogo className="w-full text-[#3b3b3f] [filter:drop-shadow(0_1px_0_rgba(255,255,255,0.6))]" />
+            </div>
+          </div>
+        )}
+
+        {/* ── Spot grid ── */}
+        <div
+          className="relative z-20 h-full w-full"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(6, minmax(0, 1fr))',
+            gridTemplateRows: 'minmax(0, 1fr) minmax(0, 0.9fr) minmax(0, 1fr)',
+            gap: 'calc(var(--lidw, 100cqw) * 0.014)',
+            padding: 'calc(var(--lidw, 100cqw) * 0.019)',
           }}
         >
-          {/* Spot grid */}
-          <div
-            className="absolute inset-[4%] grid grid-cols-6 gap-[2.5%]"
-            style={{ gridAutoRows: '1fr' }}
-          >
-            {spots.map(spot => {
-              const layout = SPOT_LAYOUT[spot.number];
-              if (!layout) return null;
-              const isOccupied = spot.currentBid > 0 && spot.brandName;
-              const sizeColor = SIZE_COLORS[layout.sizeLabel] || SIZE_COLORS.S;
+          {spots.map((spot) => {
+            const layout = SPOT_LAYOUT[spot.number];
+            if (!layout) return null;
+            const isOccupied = spot.currentBid > 0 && spot.brandName;
 
-              return (
-                <button
-                  key={spot.id}
-                  onClick={() => onSelectSpot(spot)}
-                  className={`
-                    relative rounded-[6px] transition-all cursor-pointer
-                    flex flex-col items-center justify-center text-center
-                    ${isOccupied
-                      ? 'bg-white/95 border border-[#0071e3]/20 hover:shadow-lg hover:scale-[1.02]'
-                      : 'bg-white/60 border border-dashed border-[#1d1d1f]/12 hover:bg-white/85 hover:border-[#0071e3]/40'
-                    }
-                  `}
-                  style={{
-                    gridColumn: `${layout.col} / span ${layout.colSpan}`,
-                    gridRow: layout.row,
-                  }}
-                >
-                  {isOccupied ? (
-                    <>
-                      {spot.logoUrl ? (
-                        <img
-                          src={spot.logoUrl}
-                          alt={spot.brandName || ''}
-                          className="max-w-[60%] max-h-[50%] object-contain"
-                        />
-                      ) : (
-                        <span className="text-[clamp(9px,2cqw,14px)] font-semibold text-[#1d1d1f] truncate max-w-[90%]">
-                          {spot.brandName}
-                        </span>
-                      )}
-                      <span className="text-[clamp(8px,1.5cqw,11px)] text-[#1a7f37] font-medium mt-[2px]">
-                        ${spot.currentBid}
+            return (
+              <div
+                key={spot.id}
+                style={{
+                  gridColumn: `${layout.col} / span ${layout.colSpan}`,
+                  gridRow: layout.row,
+                }}
+              >
+                {isOccupied ? (
+                  /* ── Sold spot ── */
+                  <button
+                    onClick={() => onSelectSpot(spot)}
+                    className="flex h-full w-full flex-col items-center justify-center gap-1 rounded-[calc(var(--lidw,100cqw)*0.014)] transition-opacity hover:opacity-75 cursor-pointer"
+                  >
+                    {spot.logoUrl ? (
+                      <img
+                        src={spot.logoUrl}
+                        alt={spot.brandName || ''}
+                        loading="lazy"
+                        decoding="async"
+                        className="max-h-[56%] max-w-[88%] shrink-0 object-contain"
+                      />
+                    ) : (
+                      <span
+                        className="max-w-full text-center font-semibold leading-tight text-[#1d1d1f] [overflow-wrap:anywhere]"
+                        style={{ fontSize: 'calc(var(--lidw, 100cqw) * 0.016)' }}
+                      >
+                        {spot.brandName}
                       </span>
-                    </>
-                  ) : (
-                    <>
-                      <span className={`text-[clamp(8px,1.4cqw,11px)] font-medium ${sizeColor} opacity-70`}>
-                        {layout.sizeLabel} · #{spot.number}
-                      </span>
-                      <span className="text-[clamp(11px,2.2cqw,18px)] font-bold text-[#1d1d1f] tracking-[-0.02em]">
-                        ${spot.startingPrice}
-                      </span>
-                      <span className="text-[clamp(7px,1.2cqw,10px)] text-[#86868b]">
-                        {layout.dims}
-                      </span>
-                    </>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Apple logo — visible only when center spot (#6) is empty */}
-          {spots.find(s => s.number === 6 && s.currentBid === 0) && (
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-[0.06] z-0">
-              <svg width="40" height="48" viewBox="0 0 170 200" fill="#1d1d1f">
-                <path d="M119.8 44.2c-3.4-8.5-8.2-15.8-14.8-21.1C98.5 17.5 91 14.5 82.5 14.5c-5.5 0-10.7 1.2-15.3 3.5-4.3 2.1-8 4.8-10.6 7.3-2.6-2.5-6.3-5.2-10.6-7.3-4.6-2.3-9.8-3.5-15.3-3.5-8.5 0-16 3-22.5 8.6C1.6 29.4-3 36.7-6.4 45.2c-3.7 9.2-5.5 19.3-5.5 30.3 0 13.5 3 27.3 9 41.3 5.5 12.8 12.7 24.3 21.6 34.3 8.2 9.2 16.2 16.2 24.1 20.8 6.5 3.8 11.8 5.7 13.7 5.7 1.9 0 7.2-1.9 13.7-5.7 7.9-4.6 15.9-11.6 24.1-20.8 8.9-10 16.1-21.5 21.6-34.3 6-14 9-27.8 9-41.3 0-11-1.8-21.1-5.5-30.3z" transform="translate(85,100) scale(0.85)"/>
-              </svg>
-            </div>
-          )}
+                    )}
+                    <span
+                      className="font-medium text-[#1a7f37]"
+                      style={{ fontSize: 'calc(var(--lidw, 100cqw) * 0.013)' }}
+                    >
+                      ${spot.currentBid}
+                    </span>
+                  </button>
+                ) : (
+                  /* ── Empty spot (for sale) ── */
+                  <button
+                    onClick={() => onSelectSpot(spot)}
+                    className="flex h-full w-full cursor-pointer flex-col items-center justify-center rounded-[calc(var(--lidw,100cqw)*0.014)] border border-dashed border-black/15 transition-all hover:border-black/30 hover:bg-white/10"
+                  >
+                    <span
+                      className="font-medium uppercase tracking-wide text-[#1d1d1f]/50"
+                      style={{ fontSize: 'calc(var(--lidw, 100cqw) * 0.013)' }}
+                    >
+                      {layout.sizeLabel}
+                    </span>
+                    <span
+                      className="font-semibold tabular-nums text-[#1d1d1f]"
+                      style={{ fontSize: 'calc(var(--lidw, 100cqw) * 0.016)' }}
+                    >
+                      {spot.startingPrice} $
+                    </span>
+                  </button>
+                )}
+              </div>
+            );
+          })}
         </div>
-      </div>
-
-      {/* === Hinge === */}
-      <div className="relative mx-auto" style={{ width: '104%', marginLeft: '-2%' }}>
-        <div
-          className="h-[6px] rounded-b-[2px]"
-          style={{
-            background: 'linear-gradient(180deg, #b0b0b5 0%, #a0a0a5 50%, #909095 100%)',
-            boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
-          }}
-        />
-      </div>
-
-      {/* === Base === */}
-      <div className="relative mx-auto" style={{ width: '108%', marginLeft: '-4%' }}>
-        <div
-          className="h-[3px] rounded-b-[4px]"
-          style={{
-            background: 'linear-gradient(180deg, #c0c0c5 0%, #b0b0b5 100%)',
-          }}
-        />
       </div>
     </div>
   );
