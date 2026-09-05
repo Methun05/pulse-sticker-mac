@@ -116,14 +116,64 @@ function SpotCell({
   );
 }
 
-// ── Keyboard rows (AZERTY layout from brandmylaptop screenshot) ──
-const KB_ROWS = [
-  { keys: ['esc','F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12','⏏'], small: true },
-  { keys: ['`','1','2','3','4','5','6','7','8','9','0','-','=','⌫'], small: false },
-  { keys: ['⇥','Q','W','E','R','T','Y','U','I','O','P','[',']','\\'], small: false },
-  { keys: ['⇪','A','S','D','F','G','H','J','K','L',';','\'','⏎'], small: false },
-  { keys: ['⇧','Z','X','C','V','B','N','M',',','.','/','⇧'], small: false },
-  { keys: ['fn','⌃','⌥','⌘','','⌘','⌥','←','↑↓','→'], small: false },
+// ── Keyboard layout: each row is an array of { label, flex } ──
+const KB_ROWS: { label: string; flex: number }[][] = [
+  // Function row (half-height)
+  [
+    { label: 'esc', flex: 1 }, { label: 'F1', flex: 1 }, { label: 'F2', flex: 1 },
+    { label: 'F3', flex: 1 }, { label: 'F4', flex: 1 }, { label: 'F5', flex: 1 },
+    { label: 'F6', flex: 1 }, { label: 'F7', flex: 1 }, { label: 'F8', flex: 1 },
+    { label: 'F9', flex: 1 }, { label: 'F10', flex: 1 }, { label: 'F11', flex: 1 },
+    { label: 'F12', flex: 1 }, { label: '🔒', flex: 1 },
+  ],
+  // Number row
+  [
+    { label: '`', flex: 1 }, { label: '1', flex: 1 }, { label: '2', flex: 1 },
+    { label: '3', flex: 1 }, { label: '4', flex: 1 }, { label: '5', flex: 1 },
+    { label: '6', flex: 1 }, { label: '7', flex: 1 }, { label: '8', flex: 1 },
+    { label: '9', flex: 1 }, { label: '0', flex: 1 }, { label: '-', flex: 1 },
+    { label: '=', flex: 1 }, { label: '⌫', flex: 1.5 },
+  ],
+  // QWERTY row
+  [
+    { label: '⇥', flex: 1.5 }, { label: 'Q', flex: 1 }, { label: 'W', flex: 1 },
+    { label: 'E', flex: 1 }, { label: 'R', flex: 1 }, { label: 'T', flex: 1 },
+    { label: 'Y', flex: 1 }, { label: 'U', flex: 1 }, { label: 'I', flex: 1 },
+    { label: 'O', flex: 1 }, { label: 'P', flex: 1 }, { label: '[', flex: 1 },
+    { label: ']', flex: 1 }, { label: '\\', flex: 1 },
+  ],
+  // Home row
+  [
+    { label: '⇪', flex: 1.75 }, { label: 'A', flex: 1 }, { label: 'S', flex: 1 },
+    { label: 'D', flex: 1 }, { label: 'F', flex: 1 }, { label: 'G', flex: 1 },
+    { label: 'H', flex: 1 }, { label: 'J', flex: 1 }, { label: 'K', flex: 1 },
+    { label: 'L', flex: 1 }, { label: ';', flex: 1 }, { label: "'", flex: 1 },
+    { label: '⏎', flex: 1.75 },
+  ],
+  // Shift row
+  [
+    { label: '⇧', flex: 2.25 }, { label: 'Z', flex: 1 }, { label: 'X', flex: 1 },
+    { label: 'C', flex: 1 }, { label: 'V', flex: 1 }, { label: 'B', flex: 1 },
+    { label: 'N', flex: 1 }, { label: 'M', flex: 1 }, { label: ',', flex: 1 },
+    { label: '.', flex: 1 }, { label: '/', flex: 1 }, { label: '⇧', flex: 2.25 },
+  ],
+  // Bottom row
+  [
+    { label: 'fn', flex: 1 }, { label: '⌃', flex: 1 }, { label: '⌥', flex: 1 },
+    { label: '⌘', flex: 1.25 }, { label: '', flex: 5 }, { label: '⌘', flex: 1.25 },
+    { label: '⌥', flex: 1 }, { label: '←', flex: 1 }, { label: '↑↓', flex: 1 },
+    { label: '→', flex: 1 },
+  ],
+];
+
+// ── Inside palm rest spot layout: 3-col × 2-row ──
+const INSIDE_SPOTS: { row: number; col: number; sizeLabel: string }[] = [
+  { row: 1, col: 1, sizeLabel: 'LARGE' },
+  { row: 1, col: 2, sizeLabel: 'LARGE' },
+  { row: 1, col: 3, sizeLabel: 'LARGE' },
+  { row: 2, col: 1, sizeLabel: 'SMALL' },
+  { row: 2, col: 2, sizeLabel: 'SMALL' },
+  { row: 2, col: 3, sizeLabel: 'SMALL' },
 ];
 
 // ── Inside view: MacBook open from top ──
@@ -149,14 +199,15 @@ function InsideView({
 
   return (
     <div ref={baseRef} className="mx-auto w-full max-w-[860px]" style={{ containerType: 'inline-size' }}>
-      {/* ── Screen edge (thin bar at top) ── */}
+      {/* ── Screen edge (thin hinge bar at top) ── */}
       <div
-        className="mx-auto rounded-t-[8px]"
+        className="mx-auto"
         style={{
-          width: '92%',
-          height: '10px',
-          background: 'linear-gradient(180deg, #b8b8bd 0%, #a8a8ad 100%)',
-          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.5)',
+          width: '94%',
+          height: '8px',
+          borderRadius: '4px 4px 0 0',
+          background: 'linear-gradient(180deg, #c5c5ca 0%, #b0b0b5 100%)',
+          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.6)',
         }}
       />
 
@@ -164,7 +215,7 @@ function InsideView({
       <div
         className="relative w-full overflow-hidden"
         style={{
-          aspectRatio: '1.52',
+          aspectRatio: '1.3',
           borderRadius: '0 0 calc(var(--basew, 100cqw) * 0.026) calc(var(--basew, 100cqw) * 0.026)',
           background: `linear-gradient(172deg, ${LID_STOPS[0]} 0%, ${LID_STOPS[1]} 45%, ${LID_STOPS[2]} 100%)`,
           boxShadow:
@@ -182,99 +233,80 @@ function InsideView({
           }}
         />
 
-        <div className="relative z-10 flex h-full flex-col" style={{ padding: 'calc(var(--basew, 100cqw) * 0.025)' }}>
+        <div
+          className="relative z-10 flex h-full flex-col"
+          style={{ padding: 'calc(var(--basew, 100cqw) * 0.03)' }}
+        >
           {/* ── Keyboard ── */}
           <div
-            className="mx-auto flex w-full flex-col overflow-hidden rounded-[6px]"
+            className="flex w-full flex-col overflow-hidden"
             style={{
-              background: 'linear-gradient(180deg, #2a2a2c 0%, #1b1b1d 100%)',
-              padding: 'calc(var(--basew, 100cqw) * 0.008)',
+              background: 'linear-gradient(180deg, #2c2c2e 0%, #1c1c1e 100%)',
+              borderRadius: 'calc(var(--basew, 100cqw) * 0.014)',
+              padding: 'calc(var(--basew, 100cqw) * 0.01)',
               gap: 'calc(var(--basew, 100cqw) * 0.004)',
-              flex: '0 0 58%',
+              flex: '0 0 60%',
             }}
           >
             {KB_ROWS.map((row, ri) => (
-              <div key={ri} className="flex flex-1 gap-[1px]">
-                {row.keys.map((key, ki) => {
-                  const isSpace = key === '';
-                  return (
-                    <div
-                      key={ki}
-                      className={`flex items-center justify-center rounded-[3px] text-white/70 select-none ${
-                        isSpace ? 'flex-[4]' : 'flex-1'
-                      }`}
-                      style={{
-                        background: isSpace
-                          ? 'linear-gradient(180deg, #3a3a3c 0%, #2c2c2e 100%)'
-                          : 'linear-gradient(180deg, #4a4a4c 0%, #3a3a3c 100%)',
-                        fontSize: row.small
-                          ? 'calc(var(--basew, 100cqw) * 0.008)'
-                          : 'calc(var(--basew, 100cqw) * 0.012)',
-                        minHeight: row.small ? '40%' : undefined,
-                      }}
-                    >
-                      <span className="opacity-60">{key}</span>
-                    </div>
-                  );
-                })}
+              <div
+                key={ri}
+                className="flex"
+                style={{
+                  flex: ri === 0 ? '0 0 12%' : 1,
+                  gap: 'calc(var(--basew, 100cqw) * 0.004)',
+                }}
+              >
+                {row.map((key, ki) => (
+                  <div
+                    key={ki}
+                    className="flex items-center justify-center select-none"
+                    style={{
+                      flex: key.flex,
+                      borderRadius: 'calc(var(--basew, 100cqw) * 0.006)',
+                      background: key.label === ''
+                        ? 'linear-gradient(180deg, #3a3a3c 0%, #303032 100%)'
+                        : 'linear-gradient(180deg, #4a4a4e 0%, #3a3a3e 100%)',
+                      fontSize: ri === 0
+                        ? 'calc(var(--basew, 100cqw) * 0.01)'
+                        : 'calc(var(--basew, 100cqw) * 0.015)',
+                      color: 'rgba(255,255,255,0.55)',
+                      boxShadow: '0 1px 0 rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)',
+                    }}
+                  >
+                    {key.label}
+                  </div>
+                ))}
               </div>
             ))}
           </div>
 
-          {/* ── Palm rest / Trackpad area with spots ── */}
+          {/* ── Palm rest with spots (3×2 grid, no trackpad) ── */}
           <div
-            className="relative mt-auto flex-1"
+            className="flex-1"
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(6, minmax(0, 1fr))',
+              gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
               gridTemplateRows: 'repeat(2, minmax(0, 1fr))',
               gap: 'calc(var(--basew, 100cqw) * 0.012)',
-              paddingTop: 'calc(var(--basew, 100cqw) * 0.015)',
+              marginTop: 'calc(var(--basew, 100cqw) * 0.02)',
             }}
           >
-            {/* Trackpad (center of the grid, overlaid) */}
-            <div
-              className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-0 rounded-[8px]"
-              style={{
-                width: '38%',
-                height: '80%',
-                background: 'linear-gradient(180deg, rgba(0,0,0,0.03) 0%, rgba(0,0,0,0.06) 100%)',
-                border: '1px solid rgba(0,0,0,0.08)',
-              }}
-            />
-
-            {/* Palm rest spots — positions around the trackpad */}
-            {spots.map((spot) => {
-              const layout = SPOT_LAYOUT[spot.number];
-              if (!layout) return null;
-              // Map lid spots to inside positions:
-              // Row 1 (top 3 large) → not shown on inside
-              // Row 2 (small spots) → left & right of trackpad
-              // Row 3 (medium) → bottom row
-              // For inside, we show spots 4-10 (the small + medium ones)
-              // arranged as 2 rows of 3 around the trackpad
-              return null; // We'll use a dedicated inside layout below
-            })}
-
-            {/* Inside spots: 2 rows × 3 cols around trackpad */}
             {spots.slice(0, 6).map((spot, i) => {
-              // 6 spots on the palm rest: 3 top row, 3 bottom row
-              const row = i < 3 ? 1 : 2;
-              const col = (i % 3) * 2 + 1;
-              const colSpan = 2;
+              const layout = INSIDE_SPOTS[i];
+              if (!layout) return null;
 
               return (
                 <div
                   key={spot.id}
-                  className="relative z-10"
                   style={{
-                    gridColumn: `${col} / span ${colSpan}`,
-                    gridRow: row,
+                    gridColumn: layout.col,
+                    gridRow: layout.row,
                   }}
                 >
                   <SpotCell
                     spot={spot}
-                    layout={SPOT_LAYOUT[spot.number] || { sizeLabel: 'SMALL' }}
+                    layout={{ sizeLabel: layout.sizeLabel }}
                     onSelectSpot={onSelectSpot}
                     lidVar="--basew"
                   />
