@@ -288,10 +288,10 @@ function InsideView({
         className="absolute"
         style={{
           ...spotGrid,
-          top: '64%',
-          bottom: '7%',
-          left: '8%',
-          width: '21%',
+          top: '65%',
+          bottom: '9%',
+          left: '12%',
+          width: '17%',
         }}
       >
         {leftSpots.map((spot) => (
@@ -311,10 +311,10 @@ function InsideView({
         className="absolute"
         style={{
           ...spotGrid,
-          top: '64%',
-          bottom: '7%',
-          right: '8%',
-          width: '21%',
+          top: '65%',
+          bottom: '9%',
+          right: '12%',
+          width: '17%',
         }}
       >
         {rightSpots.map((spot) => (
