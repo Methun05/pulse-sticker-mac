@@ -222,7 +222,8 @@ function LidView({
   );
 }
 
-// ── Inside view: real MacBook photo + spot overlay on palm rest ──
+// ── Inside view: real MacBook photo + spots around trackpad ──
+// Photo measured: 1553×1013px. Palm rest zones calculated from pixel positions.
 function InsideView({
   spots,
   onSelectSpot,
@@ -243,6 +244,17 @@ function InsideView({
     return () => ro.disconnect();
   }, []);
 
+  // Split spots into zones around the trackpad:
+  // Top strip (3 spots): full width above trackpad
+  // Left of trackpad (2 spots): stacked vertically
+  // Right of trackpad (2 spots): stacked vertically
+  const topSpots = spots.slice(0, 3);    // spots 1-3
+  const leftSpots = spots.slice(3, 5);   // spots 4-5
+  const rightSpots = spots.slice(5, 7);  // spots 6-7
+  const bottomSpots = spots.slice(7, 10); // spots 8-10
+
+  const gap = 'calc(var(--basew, 100cqw) * 0.008)';
+
   return (
     <div ref={ref} className="relative" style={{ containerType: 'inline-size' }}>
       <img
@@ -252,35 +264,99 @@ function InsideView({
         draggable={false}
       />
 
-      {/* Spots overlay — positioned over the palm rest area of the photo */}
+      {/* ── Top strip: 3 spots above trackpad ── */}
       <div
-        className="absolute"
+        className="absolute flex"
         style={{
-          top: '63%',
-          bottom: '5%',
-          left: '7%',
-          right: '7%',
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-          gridTemplateRows: 'repeat(2, minmax(0, 1fr))',
-          gap: 'calc(var(--basew, 100cqw) * 0.012)',
+          top: '60.2%',
+          height: '5.4%',
+          left: '5%',
+          right: '5%',
+          gap,
         }}
       >
-        {spots.slice(0, 6).map((spot, i) => {
-          const layout = INSIDE_SPOTS[i];
-          if (!layout) return null;
-          return (
-            <div key={spot.id}>
+        {topSpots.map((spot, i) => (
+          <div key={spot.id} className="flex-1">
+            <SpotCell
+              spot={spot}
+              sizeLabel={INSIDE_SPOTS[i]?.sizeLabel || 'SMALL'}
+              onSelect={onSelectSpot}
+              cssVar="--basew"
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* ── Left of trackpad: 2 spots stacked ── */}
+      <div
+        className="absolute flex flex-col"
+        style={{
+          top: '66%',
+          bottom: '8%',
+          left: '5%',
+          width: '26%',
+          gap,
+        }}
+      >
+        {leftSpots.map((spot, i) => (
+          <div key={spot.id} className="flex-1">
+            <SpotCell
+              spot={spot}
+              sizeLabel={INSIDE_SPOTS[3 + i]?.sizeLabel || 'SMALL'}
+              onSelect={onSelectSpot}
+              cssVar="--basew"
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* ── Right of trackpad: 2 spots stacked ── */}
+      <div
+        className="absolute flex flex-col"
+        style={{
+          top: '66%',
+          bottom: '8%',
+          right: '5%',
+          width: '26%',
+          gap,
+        }}
+      >
+        {rightSpots.map((spot, i) => (
+          <div key={spot.id} className="flex-1">
+            <SpotCell
+              spot={spot}
+              sizeLabel={INSIDE_SPOTS[5 + i]?.sizeLabel || 'SMALL'}
+              onSelect={onSelectSpot}
+              cssVar="--basew"
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* ── Bottom strip: 3 spots below trackpad ── */}
+      {bottomSpots.length > 0 && (
+        <div
+          className="absolute flex"
+          style={{
+            top: '92.3%',
+            height: '4%',
+            left: '5%',
+            right: '5%',
+            gap,
+          }}
+        >
+          {bottomSpots.map((spot, i) => (
+            <div key={spot.id} className="flex-1">
               <SpotCell
                 spot={spot}
-                sizeLabel={layout.sizeLabel}
+                sizeLabel={INSIDE_SPOTS[7 + i]?.sizeLabel || 'MEDIUM'}
                 onSelect={onSelectSpot}
                 cssVar="--basew"
               />
             </div>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
