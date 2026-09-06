@@ -275,10 +275,10 @@ function InsideView({
       <div
         className="absolute"
         style={{
-          top: '60.5%',
-          bottom: '4.5%',
-          left: '5%',
-          right: '5%',
+          top: '63%',
+          bottom: '7%',
+          left: '9%',
+          right: '9%',
           display: 'grid',
           gridTemplateColumns: '1fr 1fr 1.4fr 1fr 1fr',
           gridTemplateRows: '1fr 1fr',
