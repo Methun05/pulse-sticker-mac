@@ -60,6 +60,7 @@ function AppleLogo({ className }: { className?: string }) {
 }
 
 // ── Spot cell (shared between lid + inside views) ──
+// Matches brandmylaptop: empty spots show "+" icon + price, subtle bg
 function SpotCell({
   spot,
   sizeLabel,
@@ -72,12 +73,14 @@ function SpotCell({
   onSelect: (s: SpotData) => void;
 }) {
   const isOccupied = spot.currentBid > 0 && spot.brandName;
+  const radius = `calc(var(${cssVar}, 100cqw) * 0.014)`;
 
   if (isOccupied) {
     return (
       <button
         onClick={() => onSelect(spot)}
-        className="flex h-full w-full flex-col items-center justify-center gap-1 rounded-[calc(var(--lidw,100cqw)*0.014)] cursor-pointer transition-opacity hover:opacity-75"
+        className="group relative flex h-full w-full flex-col items-center justify-center gap-1 cursor-pointer transition-opacity hover:opacity-75"
+        style={{ borderRadius: radius }}
       >
         {spot.logoUrl ? (
           <img
@@ -108,14 +111,27 @@ function SpotCell({
   return (
     <button
       onClick={() => onSelect(spot)}
-      className="flex h-full w-full cursor-pointer flex-col items-center justify-center rounded-[calc(var(--lidw,100cqw)*0.014)] border border-dashed border-black/15 transition-all hover:border-black/30 hover:bg-white/10"
+      className="group relative flex h-full w-full cursor-pointer flex-col items-center justify-center border border-dashed transition-all hover:border-black/25"
+      style={{
+        borderRadius: radius,
+        borderColor: 'rgba(0,0,0,0.1)',
+        background: 'rgba(0,0,0,0.02)',
+      }}
     >
-      <span
-        className="font-medium uppercase tracking-wide text-[#1d1d1f]/50"
-        style={{ fontSize: `calc(var(${cssVar}, 100cqw) * 0.013)` }}
+      {/* + icon (exact from brandmylaptop empty spots) */}
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1.5}
+        className="text-[#1d1d1f]/40 group-hover:text-[#1d1d1f]/60"
+        style={{
+          width: `calc(var(${cssVar}, 100cqw) * 0.022)`,
+          height: `calc(var(${cssVar}, 100cqw) * 0.022)`,
+        }}
       >
-        {sizeLabel}
-      </span>
+        <path d="M12 5v14M5 12h14" strokeLinecap="round" />
+      </svg>
       <span
         className="font-semibold tabular-nums text-[#1d1d1f]"
         style={{ fontSize: `calc(var(${cssVar}, 100cqw) * 0.016)` }}
