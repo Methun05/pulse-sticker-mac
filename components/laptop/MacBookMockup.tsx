@@ -280,9 +280,9 @@ function InsideView({
           left: '9%',
           right: '9%',
           display: 'grid',
-          gridTemplateColumns: '1fr 1fr 1.4fr 1fr 1fr',
+          gridTemplateColumns: '1fr 1fr 2fr 1fr 1fr',
           gridTemplateRows: '1fr 1fr',
-          gap: 'calc(var(--basew, 100cqw) * 0.008)',
+          gap: 'calc(var(--basew, 100cqw) * 0.01)',
         }}
       >
         {/* Trackpad placeholder — spans col 3, both rows */}
