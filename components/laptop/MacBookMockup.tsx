@@ -238,11 +238,11 @@ function LidView({
   );
 }
 
-// ── Inside view: real MacBook photo + 5×2 spot grid around trackpad ──
-// Layout from brandmylaptop reference (image 10):
-//   [spot] [spot] [trackpad] [spot] [spot]
-//   [spot] [spot] [trackpad] [spot] [spot]
-// Trackpad occupies column 3 in both rows — no spot there.
+// ── Inside view: real MacBook photo + spots around trackpad ──
+// Photo: 1553×1013px. Trackpad measured at:
+//   x: 31.5% – 68.5%  y: 65% – 92%
+// Spots (98×87 at brandmylaptop scale) = ~11.4% × 15.5% of image
+// Left zone: 5.5% – 30%   Right zone: 70% – 94.5%
 function InsideView({
   spots,
   onSelectSpot,
@@ -263,20 +263,16 @@ function InsideView({
     return () => ro.disconnect();
   }, []);
 
-  // 5 cols × 2 rows, column 3 = trackpad (no spot).
-  // 8 spot positions total. Map spots to grid cells:
-  const gridCells: { col: number; row: number; sizeLabel: string }[] = [
-    { col: 1, row: 1, sizeLabel: 'SMALL' },
-    { col: 2, row: 1, sizeLabel: 'SMALL' },
-    // col 3 row 1 = trackpad
-    { col: 4, row: 1, sizeLabel: 'SMALL' },
-    { col: 5, row: 1, sizeLabel: 'SMALL' },
-    { col: 1, row: 2, sizeLabel: 'SMALL' },
-    { col: 2, row: 2, sizeLabel: 'SMALL' },
-    // col 3 row 2 = trackpad
-    { col: 4, row: 2, sizeLabel: 'SMALL' },
-    { col: 5, row: 2, sizeLabel: 'SMALL' },
-  ];
+  // Left 4 spots (2×2 grid), Right 4 spots (2×2 grid)
+  const leftSpots = spots.slice(0, 4);
+  const rightSpots = spots.slice(4, 8);
+
+  const spotGrid = {
+    display: 'grid' as const,
+    gridTemplateColumns: '1fr 1fr',
+    gridTemplateRows: '1fr 1fr',
+    gap: 'calc(var(--basew, 100cqw) * 0.008)',
+  };
 
   return (
     <div ref={ref} className="relative" style={{ containerType: 'inline-size' }}>
@@ -287,44 +283,50 @@ function InsideView({
         draggable={false}
       />
 
-      {/* 5-col × 2-row grid on the palm rest, trackpad = col 3 */}
+      {/* Left palm rest: 2×2 spot grid */}
       <div
         className="absolute"
         style={{
-          top: '63%',
-          bottom: '7%',
-          left: '9%',
-          right: '9%',
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr 2fr 1fr 1fr',
-          gridTemplateRows: '1fr 1fr',
-          gap: 'calc(var(--basew, 100cqw) * 0.01)',
+          ...spotGrid,
+          top: '65%',
+          bottom: '8%',
+          left: '5.5%',
+          width: '25%',
         }}
       >
-        {/* Trackpad placeholder — spans col 3, both rows */}
-        <div
-          className="pointer-events-none"
-          style={{ gridColumn: 3, gridRow: '1 / span 2' }}
-        />
+        {leftSpots.map((spot) => (
+          <div key={spot.id}>
+            <SpotCell
+              spot={spot}
+              sizeLabel="SMALL"
+              onSelect={onSelectSpot}
+              cssVar="--basew"
+            />
+          </div>
+        ))}
+      </div>
 
-        {/* Spot cells in the 8 positions around the trackpad */}
-        {spots.slice(0, 8).map((spot, i) => {
-          const cell = gridCells[i];
-          if (!cell) return null;
-          return (
-            <div
-              key={spot.id}
-              style={{ gridColumn: cell.col, gridRow: cell.row }}
-            >
-              <SpotCell
-                spot={spot}
-                sizeLabel={cell.sizeLabel}
-                onSelect={onSelectSpot}
-                cssVar="--basew"
-              />
-            </div>
-          );
-        })}
+      {/* Right palm rest: 2×2 spot grid */}
+      <div
+        className="absolute"
+        style={{
+          ...spotGrid,
+          top: '65%',
+          bottom: '8%',
+          right: '5.5%',
+          width: '25%',
+        }}
+      >
+        {rightSpots.map((spot) => (
+          <div key={spot.id}>
+            <SpotCell
+              spot={spot}
+              sizeLabel="SMALL"
+              onSelect={onSelectSpot}
+              cssVar="--basew"
+            />
+          </div>
+        ))}
       </div>
     </div>
   );
