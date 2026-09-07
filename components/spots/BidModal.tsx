@@ -33,6 +33,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Payment state
   const [paymentData, setPaymentData] = useState<{
     bidId: string;
     paymentId: string;
@@ -43,6 +44,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
     chainName: string;
   } | null>(null);
 
+  // Reset on open
   useEffect(() => {
     if (isOpen && spot) {
       setStep('form');
@@ -90,6 +92,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
     }
   };
 
+  // Poll for payment confirmation
   const pollStatus = useCallback(async () => {
     if (!paymentData) return;
     try {
@@ -112,6 +115,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
     return () => clearInterval(interval);
   }, [step, pollStatus]);
 
+  // Countdown timer
   const [timeLeft, setTimeLeft] = useState('');
   useEffect(() => {
     if (!paymentData?.expiresAt) return;
