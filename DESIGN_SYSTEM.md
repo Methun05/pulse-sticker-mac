@@ -101,8 +101,8 @@ This is the ONLY call-to-action on the page. Every other interactive element is 
 - Number circles, title, description
 
 ### FAQ
-- Accordion with + icon that rotates to x
-- Divider between items
+- Uses `<Accordion>` design system component (see Components below)
+- Section heading + max-w-2xl container
 
 ### Footer
 - Minimal. Logo, nav links, disclaimer.
@@ -175,11 +175,53 @@ components/
     SpotCardGrid.tsx
     BidModal.tsx
   ui/
+    Accordion.tsx      -- Rounded card accordion (FAQ, info disclosure)
     FoilButton.tsx     -- Reusable foil depth button component
     CountUp.tsx        -- GSAP number animation component
 
 lib/
   cn.ts                -- clsx + tailwind-merge utility
+```
+
+---
+
+## Components
+
+### Accordion (`components/ui/Accordion.tsx`)
+
+Rounded card accordion with smooth expand/collapse animation.
+
+**Visual spec:**
+- Each item: `rounded-[24px]`, `bg-[var(--surface)]` (grey cards on white page)
+- Gap between items: `gap-3` mobile, `gap-4` desktop
+- Button padding: `px-6 py-5`
+- Title: `18px`/`20px` bold, `tracking-[-0.2px]`, `var(--ink)`
+- `+` icon: `26px`, rotates 45deg to `×` on open (0.2s ease)
+- Answer: `px-6 pb-6`, `16px`/`18px`, `leading-[1.4]`, `var(--ink-2)`, `tracking-[-0.18px]`
+- Animation: CSS `grid-template-rows` 0fr → 1fr (300ms ease-in-out)
+
+**Props:**
+- `items`: `{ title: string, content: ReactNode }[]`
+- `allowMultiple?`: `boolean` (default `false`) — allow multiple items open at once
+
+**When to use:**
+- FAQ sections
+- Info disclosure lists (title + hidden detail pairs)
+- Collapsible option groups in settings/config panels
+
+**When NOT to use:**
+- Single toggle (use a simple disclosure)
+- Navigation menus
+- Tabbed content where all options should be visible
+
+**Usage:**
+```tsx
+import { Accordion } from '@/components/ui/Accordion';
+
+<Accordion items={[
+  { title: 'Question?', content: 'Answer text or JSX.' },
+  { title: 'Another?', content: <p>Rich content with <a href="#">links</a>.</p> },
+]} />
 ```
 
 ---

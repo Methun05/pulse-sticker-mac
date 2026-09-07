@@ -58,18 +58,6 @@ body {
   animation: spot-pulse 1.5s ease-out infinite;
 }
 
-/* FAQ accordion */
-.faq-answer {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows 0.3s ease;
-}
-.faq-answer.open {
-  grid-template-rows: 1fr;
-}
-.faq-answer > div {
-  overflow: hidden;
-}
 
 /* ── Foil Depth Button System ─────────────────────────────────────── */
 
