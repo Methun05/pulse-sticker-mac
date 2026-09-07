@@ -9,7 +9,7 @@ import { SpotCardGrid } from '@/components/spots/SpotCardGrid';
 import { BidModal } from '@/components/spots/BidModal';
 import { HowItWorksSection } from '@/components/sections/HowItWorksSection';
 import { FAQSection } from '@/components/sections/FAQSection';
-import { DarkArcBandsBackground } from '@/components/background-gradient/dark-arc-bands-background';
+import { PulseChainHeroBackground } from '@/components/background-gradient/dark-arc-bands-background';
 
 export default function HomePage() {
   const [spots, setSpots] = useState<SpotData[]>([]);
@@ -56,15 +56,17 @@ export default function HomePage() {
   const occupiedCount = spots.filter(s => s.currentBid > 0).length;
 
   return (
-    <DarkArcBandsBackground className="min-h-screen">
-      <Navbar onBidClick={handleOpenGeneralBid} totalRaised={totalRaised} />
-
-      <HeroSection
-        onBidClick={handleOpenGeneralBid}
-        onExploreSpots={scrollToSpots}
-        totalRaised={totalRaised}
-        occupiedCount={occupiedCount}
-      />
+    <main className="min-h-screen bg-white">
+      {/* Dark hero with PulseChain gradient */}
+      <PulseChainHeroBackground>
+        <Navbar onBidClick={handleOpenGeneralBid} totalRaised={totalRaised} />
+        <HeroSection
+          onBidClick={handleOpenGeneralBid}
+          onExploreSpots={scrollToSpots}
+          totalRaised={totalRaised}
+          occupiedCount={occupiedCount}
+        />
+      </PulseChainHeroBackground>
 
       {/* MacBook mockup */}
       <section className="pb-4 sm:pb-8">
@@ -85,6 +87,6 @@ export default function HomePage() {
         onClose={() => setIsBidModalOpen(false)}
         onConfirmed={loadBoard}
       />
-    </DarkArcBandsBackground>
+    </main>
   );
 }
