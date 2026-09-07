@@ -9,7 +9,6 @@ import { SpotCardGrid } from '@/components/spots/SpotCardGrid';
 import { BidModal } from '@/components/spots/BidModal';
 import { HowItWorksSection } from '@/components/sections/HowItWorksSection';
 import { FAQSection } from '@/components/sections/FAQSection';
-import { PulseChainHeroBackground } from '@/components/background-gradient/dark-arc-bands-background';
 
 export default function HomePage() {
   const [spots, setSpots] = useState<SpotData[]>([]);
@@ -57,16 +56,14 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-white">
-      {/* Dark hero with PulseChain gradient */}
-      <PulseChainHeroBackground>
-        <Navbar onBidClick={handleOpenGeneralBid} totalRaised={totalRaised} />
-        <HeroSection
-          onBidClick={handleOpenGeneralBid}
-          onExploreSpots={scrollToSpots}
-          totalRaised={totalRaised}
-          occupiedCount={occupiedCount}
-        />
-      </PulseChainHeroBackground>
+      <Navbar onBidClick={handleOpenGeneralBid} totalRaised={totalRaised} />
+
+      <HeroSection
+        onBidClick={handleOpenGeneralBid}
+        onExploreSpots={scrollToSpots}
+        totalRaised={totalRaised}
+        occupiedCount={occupiedCount}
+      />
 
       {/* MacBook mockup */}
       <section className="pb-4 sm:pb-8">
