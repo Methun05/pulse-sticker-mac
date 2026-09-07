@@ -20,7 +20,7 @@ export function SpotCard({ spot, onBidClick }: SpotCardProps) {
   const badge = SIZE_BADGE[spot.size] || SIZE_BADGE['Medium'];
 
   return (
-    <div className="rounded-xl border border-[var(--hairline)] bg-white hover:shadow-md transition-shadow p-4">
+    <div className="rounded-xl border border-[var(--hairline)] bg-[var(--surface)] hover:bg-[var(--surface-2)] transition-colors p-4">
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
           <span className="text-[13px] font-semibold text-[var(--ink)]">#{spot.number}</span>
@@ -66,8 +66,8 @@ export function SpotCard({ spot, onBidClick }: SpotCardProps) {
           onClick={() => onBidClick(spot)}
           className={`rounded-full px-4 py-1.5 text-[13px] font-medium transition-colors ${
             isOccupied
-              ? 'border border-[var(--blue)] text-[var(--blue)] hover:bg-[var(--blue)] hover:text-white'
-              : 'bg-[var(--blue)] text-white hover:bg-[var(--blue-hover)]'
+              ? 'border border-[var(--blue)] text-[var(--blue)] hover:bg-[var(--blue)] hover:text-[#0A0B0E]'
+              : 'bg-[var(--blue)] text-[#0A0B0E] hover:bg-[var(--blue-hover)]'
           }`}
         >
           {isOccupied ? 'Outbid' : 'Bid now'}
