@@ -46,7 +46,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${spaceGrotesk.variable} scroll-smooth`}>
-      <body className="bg-[#0A0B0E] text-neutral-100 font-[var(--font-space-grotesk),system-ui,-apple-system,sans-serif] antialiased min-h-screen">
+      <body className="bg-white text-[#1d1d1f] font-[var(--font-space-grotesk),system-ui,-apple-system,sans-serif] antialiased min-h-screen">
         {children}
         <Analytics />
       </body>
