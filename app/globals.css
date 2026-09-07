@@ -1,23 +1,19 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0A0B0E;
-  --surface: #141519;
-  --surface-2: #1a1b21;
-  --ink: #f0f0f2;
-  --ink-2: #a0a0a8;
-  --ink-3: #6b6b73;
-  --hairline: #2a2a32;
-  --blue: #38bdf8;
-  --blue-hover: #56c8fa;
-  --green: #34d399;
-  --amber: #fbbf24;
-  --red: #fb7185;
-
-  /* Laptop lid */
-  --lid-1: #e8e8ed;
-  --lid-2: #dcdcdf;
-  --lid-3: #c8c8cd;
+  --background: #ffffff;
+  --surface: #f5f5f7;
+  --ink: #1d1d1f;
+  --ink-2: #56565c;
+  --ink-3: #86868b;
+  --hairline: #d2d2d7;
+  --blue: #0071e3;
+  --blue-hover: #0077ed;
+  --green: #1a7f37;
+  --amber: #d97706;
+  --red: #e40014;
+  --pulse-green: #00ff55;
+  --pulse-green-2: #00ff99;
 
   --radius-sm: 0.25rem;
   --radius-md: 0.375rem;
@@ -53,9 +49,9 @@ body {
 
 /* Spot pulse animation */
 @keyframes spot-pulse {
-  0% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.3); }
-  70% { box-shadow: 0 0 0 8px rgba(56, 189, 248, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0); }
+  0% { box-shadow: 0 0 0 0 rgba(0, 113, 227, 0.3); }
+  70% { box-shadow: 0 0 0 8px rgba(0, 113, 227, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 113, 227, 0); }
 }
 
 .spot-available:hover {
