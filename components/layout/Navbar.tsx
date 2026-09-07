@@ -16,32 +16,32 @@ export function Navbar({ onBidClick, totalRaised }: NavbarProps) {
   };
 
   return (
-    <nav className="sticky top-0 z-50 bg-[#0A0B0E]/80 backdrop-blur-xl border-b border-white/10">
+    <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-[var(--hairline)]">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
         {/* Logo */}
-        <a href="/" className="flex items-center gap-2 font-semibold text-[15px] tracking-[-0.01em] text-white">
-          <span className="w-7 h-7 rounded-lg bg-[var(--pulse-green)] text-[#0A0B0E] flex items-center justify-center text-xs font-bold">P</span>
+        <a href="/" className="flex items-center gap-2 font-semibold text-[15px] tracking-[-0.01em]">
+          <span className="w-7 h-7 rounded-lg bg-[var(--ink)] text-white flex items-center justify-center text-xs font-bold">P</span>
           PulseSticker
         </a>
 
         {/* Center links */}
-        <div className="hidden md:flex items-center gap-8 text-[14px] text-white/60">
-          <button onClick={() => scrollTo('spots')} className="hover:text-white transition-colors">Spots</button>
-          <button onClick={() => scrollTo('how-it-works')} className="hover:text-white transition-colors">How it works</button>
-          <button onClick={() => scrollTo('faq')} className="hover:text-white transition-colors">FAQ</button>
+        <div className="hidden md:flex items-center gap-8 text-[14px] text-[var(--ink-2)]">
+          <button onClick={() => scrollTo('spots')} className="hover:text-[var(--ink)] transition-colors">Spots</button>
+          <button onClick={() => scrollTo('how-it-works')} className="hover:text-[var(--ink)] transition-colors">How it works</button>
+          <button onClick={() => scrollTo('faq')} className="hover:text-[var(--ink)] transition-colors">FAQ</button>
         </div>
 
         {/* Right */}
         <div className="flex items-center gap-3">
           <button
             onClick={onBidClick}
-            className="rounded-full bg-white/10 hover:bg-white/20 text-white px-5 py-2 text-[14px] font-medium transition-colors"
+            className="rounded-full bg-[var(--ink)] hover:bg-[var(--ink-2)] text-white px-5 py-2 text-[14px] font-medium transition-colors"
           >
             Claim a spot
           </button>
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden w-8 h-8 flex items-center justify-center text-white"
+            className="md:hidden w-8 h-8 flex items-center justify-center"
             aria-label="Menu"
           >
             {mobileOpen ? (
@@ -54,10 +54,10 @@ export function Navbar({ onBidClick, totalRaised }: NavbarProps) {
       </div>
 
       {mobileOpen && (
-        <div className="md:hidden border-t border-white/10 bg-[#0A0B0E] px-4 py-3 space-y-3">
-          <button onClick={() => scrollTo('spots')} className="block text-[15px] text-white/60">Spots</button>
-          <button onClick={() => scrollTo('how-it-works')} className="block text-[15px] text-white/60">How it works</button>
-          <button onClick={() => scrollTo('faq')} className="block text-[15px] text-white/60">FAQ</button>
+        <div className="md:hidden border-t border-[var(--hairline)] bg-white px-4 py-3 space-y-3">
+          <button onClick={() => scrollTo('spots')} className="block text-[15px] text-[var(--ink-2)]">Spots</button>
+          <button onClick={() => scrollTo('how-it-works')} className="block text-[15px] text-[var(--ink-2)]">How it works</button>
+          <button onClick={() => scrollTo('faq')} className="block text-[15px] text-[var(--ink-2)]">FAQ</button>
         </div>
       )}
     </nav>
