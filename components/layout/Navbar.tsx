@@ -16,11 +16,11 @@ export function Navbar({ onBidClick, totalRaised }: NavbarProps) {
   };
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-[var(--hairline)]">
+    <nav className="sticky top-0 z-50 bg-[#0A0B0E]/80 backdrop-blur-xl border-b border-[var(--hairline)]">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
         {/* Logo */}
-        <a href="/" className="flex items-center gap-2 font-semibold text-[15px] tracking-[-0.01em]">
-          <span className="w-7 h-7 rounded-lg bg-[var(--ink)] text-white flex items-center justify-center text-xs font-bold">P</span>
+        <a href="/" className="flex items-center gap-2 font-semibold text-[15px] tracking-[-0.01em] text-[var(--ink)]">
+          <span className="w-7 h-7 rounded-lg bg-[var(--blue)] text-[#0A0B0E] flex items-center justify-center text-xs font-bold">P</span>
           PulseSticker
         </a>
 
@@ -40,13 +40,13 @@ export function Navbar({ onBidClick, totalRaised }: NavbarProps) {
           )}
           <button
             onClick={onBidClick}
-            className="rounded-full bg-[var(--blue)] hover:bg-[var(--blue-hover)] text-white px-5 py-2 text-[14px] font-medium transition-colors"
+            className="rounded-full bg-[var(--blue)] hover:bg-[var(--blue-hover)] text-[#0A0B0E] px-5 py-2 text-[14px] font-medium transition-colors"
           >
             Place a bid
           </button>
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden w-8 h-8 flex items-center justify-center"
+            className="md:hidden w-8 h-8 flex items-center justify-center text-[var(--ink)]"
             aria-label="Menu"
           >
             {mobileOpen ? (
@@ -59,7 +59,7 @@ export function Navbar({ onBidClick, totalRaised }: NavbarProps) {
       </div>
 
       {mobileOpen && (
-        <div className="md:hidden border-t border-[var(--hairline)] bg-white px-4 py-3 space-y-3">
+        <div className="md:hidden border-t border-[var(--hairline)] bg-[#0A0B0E] px-4 py-3 space-y-3">
           <button onClick={() => scrollTo('spots')} className="block text-[15px] text-[var(--ink-2)]">Spots</button>
           <button onClick={() => scrollTo('how-it-works')} className="block text-[15px] text-[var(--ink-2)]">How it works</button>
           <button onClick={() => scrollTo('faq')} className="block text-[15px] text-[var(--ink-2)]">FAQ</button>
