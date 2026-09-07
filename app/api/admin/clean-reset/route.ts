@@ -1,30 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db, MACBOOK_SPOTS } from '@/lib/db';
+import { isAuthorized, unauthorizedResponse } from '@/lib/auth';
+import { rateLimit } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin_pulse_sticker_2026';
+// Changed from GET to POST — destructive actions must not be on GET
+export async function POST(request: NextRequest) {
+  const rl = rateLimit(request, { maxRequests: 3, windowMs: 60_000, prefix: 'admin-reset' });
+  if (rl) return rl;
 
-function isAuthorized(request: NextRequest): boolean {
-  const authHeader = request.headers.get('authorization') || '';
-  const token = authHeader.replace('Bearer ', '');
-  const key = request.nextUrl.searchParams.get('key');
-  return token === ADMIN_PASSWORD || key === ADMIN_PASSWORD;
-}
-
-export async function GET(request: NextRequest) {
-  if (!isAuthorized(request)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  if (!isAuthorized(request)) return unauthorizedResponse();
 
   try {
-    // Delete all data
     await db.payment.deleteMany({});
     await db.bid.deleteMany({});
     await db.spot.deleteMany({});
     await db.board.deleteMany({});
 
-    // Create fresh board
     const board = await db.board.create({
       data: {
         title: 'PulseChain MacBook Sticker Board',
@@ -33,7 +26,6 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Create 10 spots
     for (const s of MACBOOK_SPOTS) {
       await db.spot.create({
         data: {
@@ -51,7 +43,6 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Reset admin config
     await db.adminConfig.upsert({
       where: { id: 'default_config' },
       update: { pageViews: 0, siteActive: true },
@@ -65,7 +56,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error: unknown) {
     console.error('Clean reset error:', error);
-    const message = error instanceof Error ? error.message : 'Reset failed';
-    return NextResponse.json({ success: false, error: message }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

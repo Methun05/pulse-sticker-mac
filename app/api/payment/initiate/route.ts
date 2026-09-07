@@ -9,8 +9,13 @@ import {
   baseUnitsToHuman,
   snapshotBlockchainState,
 } from '@/lib/crypto';
+import { rateLimit } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
+  // 10 bids per minute per IP — prevents DB/unique-cents exhaustion
+  const rl = rateLimit(request, { maxRequests: 10, windowMs: 60_000, prefix: 'payment-initiate' });
+  if (rl) return rl;
+
   try {
     await ensureDatabase();
     const body = await request.json();
@@ -30,6 +35,20 @@ export async function POST(request: NextRequest) {
     if (!spotNumber || !bidAmount || !brandName || !walletAddress) {
       return NextResponse.json(
         { success: false, error: 'Missing required fields: spotNumber, bidAmount, brandName, walletAddress' },
+        { status: 400 }
+      );
+    }
+
+    // XSS prevention: validate URL fields
+    if (website && !/^https?:\/\//i.test(website)) {
+      return NextResponse.json(
+        { success: false, error: 'Website must start with http:// or https://' },
+        { status: 400 }
+      );
+    }
+    if (logoUrl && !/^https:\/\//i.test(logoUrl)) {
+      return NextResponse.json(
+        { success: false, error: 'Logo URL must start with https://' },
         { status: 400 }
       );
     }
@@ -233,7 +252,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: unknown) {
     console.error('Error initiating payment:', error);
-    const message = error instanceof Error ? error.message : 'Internal server error';
-    return NextResponse.json({ success: false, error: message }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
   }
 }

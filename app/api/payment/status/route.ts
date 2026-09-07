@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db, ensureDatabase } from '@/lib/db';
 import { verifyPayment } from '@/lib/crypto';
+import { rateLimit } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
+  // 20 polls per minute per IP — prevents RPC hammering
+  const rl = rateLimit(request, { maxRequests: 20, windowMs: 60_000, prefix: 'payment-status' });
+  if (rl) return rl;
+
   try {
     await ensureDatabase();
     const { searchParams } = new URL(request.url);
@@ -196,7 +201,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error: unknown) {
     console.error('Error checking payment status:', error);
-    const message = error instanceof Error ? error.message : 'Internal server error';
-    return NextResponse.json({ success: false, error: message }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -1,31 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { isAuthorized, unauthorizedResponse } from '@/lib/auth';
+import { rateLimit } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin_pulse_sticker_2026';
+// Changed from GET to POST — state mutation must not be on GET
+export async function POST(request: NextRequest) {
+  const rl = rateLimit(request, { maxRequests: 10, windowMs: 60_000, prefix: 'admin-views' });
+  if (rl) return rl;
 
-function isAuthorized(request: NextRequest): boolean {
-  const authHeader = request.headers.get('authorization') || '';
-  const token = authHeader.replace('Bearer ', '');
-  const searchParams = request.nextUrl.searchParams;
-  const key = searchParams.get('key');
-  return token === ADMIN_PASSWORD || key === ADMIN_PASSWORD;
-}
-
-export async function GET(request: NextRequest) {
-  if (!isAuthorized(request)) {
-    return NextResponse.json({ error: 'Unauthorized. Admin key required.' }, { status: 401 });
-  }
-
-  const countParam = request.nextUrl.searchParams.get('count');
-  const count = countParam ? parseInt(countParam, 10) : 210;
-
-  if (isNaN(count) || count < 0) {
-    return NextResponse.json({ error: 'Invalid count parameter' }, { status: 400 });
-  }
+  if (!isAuthorized(request)) return unauthorizedResponse();
 
   try {
+    const body = await request.json();
+    const count = typeof body.count === 'number' ? body.count : 210;
+
+    if (isNaN(count) || count < 0) {
+      return NextResponse.json({ error: 'Invalid count' }, { status: 400 });
+    }
+
     const config = await db.adminConfig.upsert({
       where: { id: 'default_config' },
       update: { pageViews: count },
@@ -38,7 +32,7 @@ export async function GET(request: NextRequest) {
       pageViews: config.pageViews,
     });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Error';
-    return NextResponse.json({ success: false, error: message }, { status: 500 });
+    console.error('Set views error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

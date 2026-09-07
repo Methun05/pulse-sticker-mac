@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db, ensureDatabase } from '@/lib/db';
+import { rateLimit } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
+  const rl = rateLimit(request, { maxRequests: 30, windowMs: 60_000, prefix: 'track-click' });
+  if (rl) return rl;
+
   try {
     await ensureDatabase();
     const body = await request.json();
@@ -24,7 +28,6 @@ export async function POST(request: NextRequest) {
         id: true,
         number: true,
         clicksCount: true,
-        currentBrandName: true,
         currentWebsite: true,
       },
     });
@@ -35,8 +38,8 @@ export async function POST(request: NextRequest) {
       clicksCount: updated.clicksCount,
       website: updated.currentWebsite,
     });
-  } catch (error) {
-    console.error('Error tracking spot click:', error);
-    return NextResponse.json({ success: false, error: 'Failed to record click' }, { status: 500 });
+  } catch (error: unknown) {
+    console.error('Error tracking click:', error);
+    return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
   }
 }

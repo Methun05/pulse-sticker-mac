@@ -1,18 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db, ensureDatabase, MACBOOK_SPOTS } from '@/lib/db';
-
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin_pulse_sticker_2026';
-
-function isAuthorized(request: NextRequest): boolean {
-  const authHeader = request.headers.get('authorization') || '';
-  const token = authHeader.replace('Bearer ', '');
-  return token === ADMIN_PASSWORD;
-}
+import { isAuthorized, unauthorizedResponse } from '@/lib/auth';
+import { rateLimit } from '@/lib/rate-limit';
 
 export async function GET(request: NextRequest) {
-  if (!isAuthorized(request)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const rl = rateLimit(request, { maxRequests: 30, windowMs: 60_000, prefix: 'admin' });
+  if (rl) return rl;
+
+  if (!isAuthorized(request)) return unauthorizedResponse();
 
   try {
     await ensureDatabase();
@@ -43,15 +38,16 @@ export async function GET(request: NextRequest) {
       payments: allPayments,
     });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Error';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('Admin GET error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
 export async function POST(request: NextRequest) {
-  if (!isAuthorized(request)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const rl = rateLimit(request, { maxRequests: 10, windowMs: 60_000, prefix: 'admin' });
+  if (rl) return rl;
+
+  if (!isAuthorized(request)) return unauthorizedResponse();
 
   try {
     await ensureDatabase();
@@ -113,7 +109,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Error';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('Admin POST error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
