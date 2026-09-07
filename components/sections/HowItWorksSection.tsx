@@ -31,7 +31,7 @@ export function HowItWorksSection() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {STEPS.map(step => (
             <div key={step.num} className="text-center md:text-left">
-              <div className="w-10 h-10 rounded-full bg-[var(--blue)] text-[#0A0B0E] flex items-center justify-center text-[15px] font-bold mx-auto md:mx-0 mb-4">
+              <div className="w-10 h-10 rounded-full bg-[var(--blue)] text-white flex items-center justify-center text-[15px] font-bold mx-auto md:mx-0 mb-4">
                 {step.num}
               </div>
               <h3 className="text-[16px] font-semibold text-[var(--ink)] mb-2">{step.title}</h3>
