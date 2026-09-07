@@ -133,15 +133,13 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
 
   if (!isOpen || !spot) return null;
 
-  const inputClass = "w-full rounded-lg border border-[var(--hairline)] bg-[var(--surface-2)] px-3 py-2 text-[14px] text-[var(--ink)] placeholder:text-[var(--ink-3)] focus:outline-none focus:border-[var(--blue)] transition-colors";
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
 
       {/* Modal */}
-      <div className="relative bg-[var(--surface)] border border-[var(--hairline)] rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+      <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-[var(--hairline)]">
           <div>
@@ -150,7 +148,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
             </h3>
             <p className="text-[13px] text-[var(--ink-3)]">{spot.size}</p>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-full hover:bg-[var(--surface-2)] flex items-center justify-center transition-colors">
+          <button onClick={onClose} className="w-8 h-8 rounded-full hover:bg-[var(--surface)] flex items-center justify-center transition-colors">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 1l12 12M13 1L1 13" stroke="var(--ink-3)" strokeWidth="1.5"/></svg>
           </button>
         </div>
@@ -161,49 +159,75 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-[13px] font-medium text-[var(--ink-2)] mb-1">Brand / Project name *</label>
-                <input type="text" required value={brandName} onChange={e => setBrandName(e.target.value)} className={inputClass} placeholder="e.g. PulseX" />
+                <input
+                  type="text" required value={brandName} onChange={e => setBrandName(e.target.value)}
+                  className="w-full rounded-lg border border-[var(--hairline)] px-3 py-2 text-[14px] focus:outline-none focus:border-[var(--blue)] transition-colors"
+                  placeholder="e.g. PulseX"
+                />
               </div>
               <div>
                 <label className="block text-[13px] font-medium text-[var(--ink-2)] mb-1">Website</label>
-                <input type="url" value={website} onChange={e => setWebsite(e.target.value)} className={inputClass} placeholder="https://pulsex.com" />
+                <input
+                  type="url" value={website} onChange={e => setWebsite(e.target.value)}
+                  className="w-full rounded-lg border border-[var(--hairline)] px-3 py-2 text-[14px] focus:outline-none focus:border-[var(--blue)] transition-colors"
+                  placeholder="https://pulsex.com"
+                />
               </div>
               <div>
                 <label className="block text-[13px] font-medium text-[var(--ink-2)] mb-1">Logo URL</label>
-                <input type="url" value={logoUrl} onChange={e => setLogoUrl(e.target.value)} className={inputClass} placeholder="https://example.com/logo.png" />
+                <input
+                  type="url" value={logoUrl} onChange={e => setLogoUrl(e.target.value)}
+                  className="w-full rounded-lg border border-[var(--hairline)] px-3 py-2 text-[14px] focus:outline-none focus:border-[var(--blue)] transition-colors"
+                  placeholder="https://example.com/logo.png"
+                />
               </div>
               <div>
                 <label className="block text-[13px] font-medium text-[var(--ink-2)] mb-1">Your wallet address *</label>
-                <input type="text" required value={walletAddress} onChange={e => setWalletAddress(e.target.value)} className={`${inputClass} font-mono`} placeholder="0x..." />
+                <input
+                  type="text" required value={walletAddress} onChange={e => setWalletAddress(e.target.value)}
+                  className="w-full rounded-lg border border-[var(--hairline)] px-3 py-2 text-[14px] font-mono focus:outline-none focus:border-[var(--blue)] transition-colors"
+                  placeholder="0x..."
+                />
               </div>
               <div>
                 <label className="block text-[13px] font-medium text-[var(--ink-2)] mb-1">Bid amount (USD) *</label>
-                <input type="number" required min={minBid} step="1" value={bidAmount} onChange={e => setBidAmount(e.target.value)} className={inputClass} />
+                <input
+                  type="number" required min={minBid} step="1" value={bidAmount} onChange={e => setBidAmount(e.target.value)}
+                  className="w-full rounded-lg border border-[var(--hairline)] px-3 py-2 text-[14px] focus:outline-none focus:border-[var(--blue)] transition-colors"
+                />
                 <p className="text-[12px] text-[var(--ink-3)] mt-1">Minimum: ${minBid}</p>
               </div>
 
+              {/* Token + Chain */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[13px] font-medium text-[var(--ink-2)] mb-1">Token</label>
-                  <select value={token} onChange={e => setToken(e.target.value)} className={inputClass}>
+                  <select
+                    value={token} onChange={e => setToken(e.target.value)}
+                    className="w-full rounded-lg border border-[var(--hairline)] px-3 py-2 text-[14px] bg-white focus:outline-none focus:border-[var(--blue)]"
+                  >
                     {SUPPORTED_TOKENS.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="block text-[13px] font-medium text-[var(--ink-2)] mb-1">Chain</label>
-                  <select value={chainId} onChange={e => setChainId(Number(e.target.value))} className={inputClass}>
+                  <select
+                    value={chainId} onChange={e => setChainId(Number(e.target.value))}
+                    className="w-full rounded-lg border border-[var(--hairline)] px-3 py-2 text-[14px] bg-white focus:outline-none focus:border-[var(--blue)]"
+                  >
                     {SUPPORTED_CHAINS.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
                 </div>
               </div>
 
               {error && (
-                <p className="text-[13px] text-[var(--red)] bg-[var(--red)]/10 rounded-lg px-3 py-2">{error}</p>
+                <p className="text-[13px] text-[var(--red)] bg-red-50 rounded-lg px-3 py-2">{error}</p>
               )}
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-full bg-[var(--blue)] hover:bg-[var(--blue-hover)] disabled:opacity-50 text-[#0A0B0E] py-3 text-[15px] font-medium transition-colors"
+                className="w-full rounded-full bg-[var(--blue)] hover:bg-[var(--blue-hover)] disabled:opacity-50 text-white py-3 text-[15px] font-medium transition-colors"
               >
                 {loading ? 'Creating payment...' : `Bid $${bidAmount || minBid}`}
               </button>
@@ -221,7 +245,8 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
                 <p className="text-[13px] text-[var(--ink-3)] mt-1">Time remaining: <span className="font-mono font-medium text-[var(--ink)]">{timeLeft}</span></p>
               </div>
 
-              <div className="bg-[var(--surface-2)] rounded-xl p-4 text-center">
+              {/* Amount */}
+              <div className="bg-[var(--surface)] rounded-xl p-4 text-center">
                 <div className="text-[11px] text-[var(--ink-3)] uppercase tracking-[0.08em] mb-1">Send exactly</div>
                 <div className="text-[28px] font-bold tracking-[-0.02em] text-[var(--ink)]">
                   {paymentData.tokenAmountDisplay} {token}
@@ -229,17 +254,19 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
                 <div className="text-[13px] text-[var(--ink-3)]">on {paymentData.chainName}</div>
               </div>
 
+              {/* Deposit address */}
               <div>
                 <div className="text-[11px] text-[var(--ink-3)] uppercase tracking-[0.08em] mb-1">To this address</div>
-                <div className="bg-[var(--surface-2)] rounded-lg px-3 py-2.5 font-mono text-[13px] text-[var(--ink)] break-all select-all">
+                <div className="bg-[var(--surface)] rounded-lg px-3 py-2.5 font-mono text-[13px] text-[var(--ink)] break-all select-all">
                   {paymentData.depositAddress}
                 </div>
               </div>
 
-              <div className="bg-[var(--amber)]/10 border border-[var(--amber)]/20 rounded-lg px-3 py-2 text-[12px] text-[var(--amber)]">
+              <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-[12px] text-amber-800">
                 Send the <strong>exact amount</strong> shown above. The amount includes unique identifier cents to match your payment.
               </div>
 
+              {/* Status */}
               <div className="flex items-center justify-center gap-2 text-[13px] text-[var(--ink-2)]">
                 <span className="w-2 h-2 rounded-full bg-[var(--amber)] animate-pulse" />
                 Waiting for payment...
@@ -250,7 +277,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
           {/* Step 3: Done */}
           {step === 'done' && (
             <div className="text-center py-4">
-              <div className="w-14 h-14 rounded-full bg-[var(--green)]/10 flex items-center justify-center mx-auto mb-4">
+              <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--green)" strokeWidth="2.5"><polyline points="20,6 9,17 4,12"/></svg>
               </div>
               <h4 className="text-[20px] font-bold text-[var(--ink)]">You got the spot!</h4>
@@ -259,7 +286,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
               </p>
               <button
                 onClick={onClose}
-                className="mt-6 rounded-full bg-[var(--blue)] text-[#0A0B0E] px-6 py-2.5 text-[14px] font-medium hover:bg-[var(--blue-hover)] transition-colors"
+                className="mt-6 rounded-full bg-[var(--blue)] text-white px-6 py-2.5 text-[14px] font-medium hover:bg-[var(--blue-hover)] transition-colors"
               >
                 Done
               </button>
@@ -269,7 +296,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
           {/* Expired */}
           {step === 'expired' && (
             <div className="text-center py-4">
-              <div className="w-14 h-14 rounded-full bg-[var(--red)]/10 flex items-center justify-center mx-auto mb-4">
+              <div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--red)" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
               </div>
               <h4 className="text-[20px] font-bold text-[var(--ink)]">Payment expired</h4>
@@ -278,7 +305,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
               </p>
               <button
                 onClick={() => setStep('form')}
-                className="mt-6 rounded-full border border-[var(--hairline)] text-[var(--ink)] px-6 py-2.5 text-[14px] font-medium hover:border-[var(--ink-3)] transition-colors"
+                className="mt-6 rounded-full border border-[var(--hairline)] px-6 py-2.5 text-[14px] font-medium hover:border-[var(--ink-3)] transition-colors"
               >
                 Try again
               </button>
