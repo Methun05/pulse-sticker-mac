@@ -36,13 +36,13 @@ export function HeroSection({ onBidClick, onExploreSpots, totalRaised, occupiedC
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
           <button
             onClick={onBidClick}
-            className="rounded-full bg-[var(--blue)] hover:bg-[var(--blue-hover)] text-white px-6 py-3 text-[15px] font-medium transition-colors w-full sm:w-auto"
+            className="rounded-full bg-[var(--blue)] hover:bg-[var(--blue-hover)] text-[#0A0B0E] px-6 py-3 text-[15px] font-medium transition-colors w-full sm:w-auto"
           >
             Claim a spot
           </button>
           <button
             onClick={onExploreSpots}
-            className="rounded-full border border-[var(--hairline)] hover:border-[var(--ink-3)] px-6 py-3 text-[15px] font-medium transition-colors w-full sm:w-auto"
+            className="rounded-full border border-[var(--hairline)] hover:border-[var(--ink-3)] text-[var(--ink)] px-6 py-3 text-[15px] font-medium transition-colors w-full sm:w-auto"
           >
             Explore spots
           </button>
@@ -52,9 +52,9 @@ export function HeroSection({ onBidClick, onExploreSpots, totalRaised, occupiedC
         <div className="mt-6 flex items-center justify-center gap-2 text-[12px] text-[var(--ink-3)]">
           <span>Accepts:</span>
           {['USDC', 'USDT', 'DAI'].map(t => (
-            <span key={t} className="px-2 py-0.5 rounded-full bg-[var(--surface)] font-medium">{t}</span>
+            <span key={t} className="px-2 py-0.5 rounded-full bg-[var(--surface)] font-medium text-[var(--ink-2)]">{t}</span>
           ))}
-          <span className="px-2 py-0.5 rounded-full bg-[var(--surface)] font-medium">5 chains</span>
+          <span className="px-2 py-0.5 rounded-full bg-[var(--surface)] font-medium text-[var(--ink-2)]">5 chains</span>
         </div>
       </div>
     </section>
