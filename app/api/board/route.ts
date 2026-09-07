@@ -18,6 +18,9 @@ export async function GET() {
               orderBy: { amount: 'desc' },
               take: 1,
             },
+            _count: {
+              select: { bids: { where: { status: 'OUTBID' } } },
+            },
           },
         },
       },
@@ -46,6 +49,7 @@ export async function GET() {
         walletAddress: spot.currentWallet,
         status: spot.status,
         bidCount: spot.bidCount,
+        outbidCount: spot._count.bids,
         clicksCount: spot.clicksCount,
       }));
 
@@ -82,6 +86,7 @@ export async function GET() {
         website: s.currentWebsite,
         status: s.status,
         bidCount: s.bidCount,
+        outbidCount: s._count.bids,
         clicksCount: s.clicksCount,
       })),
       leaderboard,

@@ -5,7 +5,7 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { HeroSection } from '@/components/sections/HeroSection';
 import { MacBookMockup, SpotData } from '@/components/laptop/MacBookMockup';
-import { SpotCardGrid } from '@/components/spots/SpotCardGrid';
+import { SpotTable } from '@/components/spots/SpotTable';
 import { BidModal } from '@/components/spots/BidModal';
 import { HowItWorksSection } from '@/components/sections/HowItWorksSection';
 import { FAQSection } from '@/components/sections/FAQSection';
@@ -65,8 +65,10 @@ export default function HomePage() {
         <MacBookMockup spots={spots} onSelectSpot={handleSpotSelect} />
       </section>
 
-      {/* Spot cards */}
-      <SpotCardGrid spots={spots} onBidClick={handleSpotSelect} />
+      {/* Spot table */}
+      <section className="py-8 sm:py-12">
+        <SpotTable spots={spots} onBidClick={handleSpotSelect} />
+      </section>
 
       <HowItWorksSection />
       <FAQSection />

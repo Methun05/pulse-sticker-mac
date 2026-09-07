@@ -54,9 +54,9 @@ export async function POST(request: NextRequest) {
     }
 
     const parsedAmount = parseFloat(bidAmount);
-    if (isNaN(parsedAmount) || parsedAmount < 1) {
+    if (isNaN(parsedAmount) || parsedAmount < 5) {
       return NextResponse.json(
-        { success: false, error: 'Minimum bid is $1' },
+        { success: false, error: 'Minimum bid is $5' },
         { status: 400 }
       );
     }
@@ -120,9 +120,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Must outbid current holder by at least $1
+    // Must outbid current holder by at least $5
     const minBid = spot.currentBid > 0
-      ? spot.currentBid + 1
+      ? spot.currentBid + 5
       : spot.startingPrice;
 
     if (parsedAmount < minBid) {

@@ -176,6 +176,7 @@ components/
     BidModal.tsx
   ui/
     Accordion.tsx      -- Rounded card accordion (FAQ, info disclosure)
+    BlockieAvatar.tsx   -- Deterministic pixelated avatar (crypto identicon)
     FoilButton.tsx     -- Reusable foil depth button component
     CountUp.tsx        -- GSAP number animation component
 
@@ -222,6 +223,38 @@ import { Accordion } from '@/components/ui/Accordion';
   { title: 'Question?', content: 'Answer text or JSX.' },
   { title: 'Another?', content: <p>Rich content with <a href="#">links</a>.</p> },
 ]} />
+```
+
+### BlockieAvatar (`components/ui/BlockieAvatar.tsx`)
+
+Deterministic pixelated avatar generated from a seed string. Crypto-native identicon style.
+
+**Visual spec:**
+- Canvas-based, 5x5 symmetric grid (mirrored left-to-right)
+- 3 colors per avatar: `hsl(h, 65%, 50%)`, `hsl(h+120, 70%, 45%)`, `hsl(h+240, 60%, 55%)`
+- Full 360° hue rotation, 60-70% saturation (visible but not overpowering)
+- `rounded-full` with `image-rendering: pixelated` for crisp edges
+- Default size: 36px
+
+**Props:**
+- `seed`: `string` — generates unique pattern (brand name, wallet address, etc.)
+- `size?`: `number` (default `36`)
+
+**When to use:**
+- Spot table rows — avatar for brands/projects (crypto payments)
+- Bid history entries — identify bidders
+- Any list needing unique visual identifiers without a real logo
+
+**When NOT to use:**
+- Brand has an actual logo URL — show the real logo
+- Available/empty spots — use a neutral circle with spot number
+
+**Usage:**
+```tsx
+import { BlockieAvatar } from '@/components/ui/BlockieAvatar';
+
+<BlockieAvatar seed="PulseX" />
+<BlockieAvatar seed="0x1234...abcd" size={48} />
 ```
 
 ---
