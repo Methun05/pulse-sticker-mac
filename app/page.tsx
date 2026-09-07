@@ -9,6 +9,7 @@ import { SpotCardGrid } from '@/components/spots/SpotCardGrid';
 import { BidModal } from '@/components/spots/BidModal';
 import { HowItWorksSection } from '@/components/sections/HowItWorksSection';
 import { FAQSection } from '@/components/sections/FAQSection';
+import { DarkArcBandsBackground } from '@/components/background-gradient/dark-arc-bands-background';
 
 export default function HomePage() {
   const [spots, setSpots] = useState<SpotData[]>([]);
@@ -55,7 +56,7 @@ export default function HomePage() {
   const occupiedCount = spots.filter(s => s.currentBid > 0).length;
 
   return (
-    <main className="min-h-screen bg-white">
+    <DarkArcBandsBackground className="min-h-screen">
       <Navbar onBidClick={handleOpenGeneralBid} totalRaised={totalRaised} />
 
       <HeroSection
@@ -84,6 +85,6 @@ export default function HomePage() {
         onClose={() => setIsBidModalOpen(false)}
         onConfirmed={loadBoard}
       />
-    </main>
+    </DarkArcBandsBackground>
   );
 }
