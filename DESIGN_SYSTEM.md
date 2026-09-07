@@ -76,7 +76,7 @@ This is the ONLY call-to-action on the page. Every other interactive element is 
 ## Layout & Sections
 
 ### Hero Section
-- **Background**: Dark (#0A0B0E) with PulseChain gradient glow (hero only)
+- **Background**: White (same as body — fully white page)
 - **Total Raised Number**: 60px bold, GSAP CountUp animation (0 to value on load)
   - Tabular nums, no shifting
   - Label below: "raised so far" in muted text
