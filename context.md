@@ -11,6 +11,7 @@ Pay-to-rank MacBook sticker leaderboard for the PulseChain community. Projects p
 - 10 spots on MacBook lid (different sizes/positions, starting prices $1–$5)
 - Payment: on-chain verification via ethers.js (no third-party provider, $0 cost)
 - Phase 1: stablecoins only (USDC, USDT, DAI). ETH/BNB blocked (no price feed yet)
+- Phase 2: Fiat card payment (one-time payment method, alongside crypto)
 - 5 chains: Ethereum, BSC, PulseChain, Base, Polygon
 - Ongoing leaderboard (not timed auction) — anyone can outbid anytime
 - NOT a marketplace — single laptop, single owner, no listing features
@@ -20,6 +21,7 @@ Pay-to-rank MacBook sticker leaderboard for the PulseChain community. Projects p
 ## Stack
 
 - **Frontend**: Next.js 15 (App Router), Tailwind CSS 4, React 19
+- **UI Library**: Watermelon UI (https://ui.watermelon.sh/) — open-source React components, copy-paste approach
 - **Backend**: Next.js API routes, Prisma 5, ethers.js v6
 - **Database**: Neon PostgreSQL (project: ancient-bird-50114279, org: org-sparkling-paper-12487049)
 - **Hosting**: Vercel (free tier), auto-deploy from GitHub main branch
@@ -131,11 +133,16 @@ Row 3: [8: M, 2col] [9: M, 2col] [10: M, 2col]
 
 ## Design system
 
-- **Theme**: Light — white bg #fff, surface #f5f5f7, ink #1d1d1f, blue CTA #0071e3
-- **Font**: Inter, tight tracking on headlines (-0.04em)
-- **Buttons**: rounded-full, blue primary, bordered secondary
+- **Source of truth**: `DESIGN_SYSTEM.md` in repo root
+- **Theme**: Light — white bg #fff, surface #f5f5f7, ink #1d1d1f. White body, dark hero section only
+- **Font**: Space Grotesk (loaded via next/font/google)
+- **UI Library**: Watermelon UI (https://ui.watermelon.sh/) — copy-paste React components
+- **Reference site**: megapot.io (visual direction, NOT exact tokens — avoid copying their CSS vars)
+- **Buttons**: rounded-full, blue primary, bordered secondary. Foil button for hero CTA only
 - **Style**: Apple-inspired, clean, minimal — reverse-engineered from brandmylaptop.com
 - **CSS vars**: --ink, --ink-2, --ink-3, --surface, --hairline, --blue (defined in globals.css)
+- **Colors**: Palette partially TBD (see DESIGN_SYSTEM.md). PulseChain green #00ff55 confirmed
+- **Components**: Accordion, BlockieAvatar, FloatingInput, LogoUpload, FoilButton, CountUp
 - **NOTE**: dpratyush02/brandmylaptop GitHub is NOT the real owner — ignore that repo
 
 ---

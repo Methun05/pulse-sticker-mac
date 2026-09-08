@@ -4,6 +4,8 @@ import React from 'react';
 import { CountUp } from '@/components/ui/CountUp';
 import { FoilButton } from '@/components/ui/FoilButton';
 
+const FUNDING_GOAL = 500;
+
 interface HeroSectionProps {
   onBidClick: () => void;
   totalRaised: number;
@@ -12,29 +14,42 @@ interface HeroSectionProps {
 
 export function HeroSection({ onBidClick, totalRaised, occupiedCount }: HeroSectionProps) {
   return (
-    <section className="pt-16 sm:pt-24 pb-14 px-4 sm:px-6 text-center">
+    <section className="pt-20 pb-14 px-4 sm:px-6 text-center">
       <div className="max-w-2xl mx-auto">
         {/* The number that screams */}
         <div className="mb-6">
           <CountUp
-            value={totalRaised}
-            className="text-[60px] font-bold tracking-[-0.04em] leading-none text-[var(--ink)]"
+            value={200}
+            className="text-[80px] sm:text-[100px] font-bold tracking-[-0.04em] leading-none text-[var(--ink)]"
           />
-          <p className="mt-2 text-[14px] text-[var(--ink-3)] tracking-wide uppercase">
-            raised so far{occupiedCount > 0 ? ` · ${occupiedCount} spot${occupiedCount !== 1 ? 's' : ''} claimed` : ''}
-          </p>
+          <div className="mt-3 max-w-sm mx-auto">
+            <div className="flex justify-between text-[14px]">
+              <span className="text-[var(--ink-2)]">$200 raised</span>
+              <span className="text-[var(--ink-3)]">goal ${FUNDING_GOAL}</span>
+            </div>
+            <div className="mt-1.5 h-1 rounded-full bg-[var(--surface)] overflow-hidden">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-[#00BFFF] via-[#8B5CF6] to-[#EC4899]"
+                style={{ width: `${Math.min((200 / FUNDING_GOAL) * 100, 100)}%` }}
+              />
+            </div>
+          </div>
         </div>
 
         {/* Headline */}
-        <h1 className="text-[clamp(1.75rem,5vw,3rem)] font-bold tracking-[-0.04em] leading-[1.1] text-[var(--ink)]">
-          Get your brand on this MacBook.
+        <h1 className="text-[clamp(1.75rem,5vw,3rem)] font-medium tracking-[-0.04em] leading-[1.1] text-[var(--ink)]">
+          Taking PulseChain to every<br />corner of the world.
         </h1>
 
         {/* Subtext */}
-        <p className="mt-4 text-[15px] sm:text-[17px] text-[var(--ink-2)] leading-relaxed max-w-[46ch] mx-auto">
-          10 sticker spots on a real MacBook lid. Pay crypto to claim yours.
-          Anyone can outbid you anytime — highest bidder holds the spot.
+        <p className="mt-4 text-[15px] sm:text-[17px] text-[var(--ink-2)] leading-relaxed max-w-[50ch] mx-auto">
+          Every sticker on this MacBook is a conversation starter. When someone asks, I onboard them, personally. 20% of all funds go straight back into growing the PulseChain community.
         </p>
+
+        {/* Manifesto link */}
+        <a href="/manifesto" className="mt-3 inline-block text-[14px] text-[var(--ink-3)] underline underline-offset-4 hover:text-[var(--ink-2)] transition-colors">
+          Read the manifesto
+        </a>
 
         {/* Single CTA */}
         <div className="mt-8 flex justify-center">
@@ -43,14 +58,6 @@ export function HeroSection({ onBidClick, totalRaised, occupiedCount }: HeroSect
           </FoilButton>
         </div>
 
-        {/* Token badges */}
-        <div className="mt-6 flex items-center justify-center gap-2 text-[12px] text-[var(--ink-3)]">
-          <span>Accepts:</span>
-          {['USDC', 'USDT', 'DAI'].map(t => (
-            <span key={t} className="px-2 py-0.5 rounded-full bg-[var(--surface)] font-medium text-[var(--ink-2)]">{t}</span>
-          ))}
-          <span className="px-2 py-0.5 rounded-full bg-[var(--surface)] font-medium text-[var(--ink-2)]">5 chains</span>
-        </div>
       </div>
     </section>
   );

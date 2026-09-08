@@ -46,7 +46,6 @@ export async function GET() {
         brandName: spot.currentBrandName,
         logoUrl: spot.currentLogoUrl,
         website: spot.currentWebsite,
-        walletAddress: spot.currentWallet,
         status: spot.status,
         bidCount: spot.bidCount,
         outbidCount: spot._count.bids,

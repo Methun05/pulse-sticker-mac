@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isAddress } from 'ethers';
 import { db, ensureDatabase } from '@/lib/db';
 import {
   TOKENS,
@@ -12,7 +13,6 @@ import {
 import { rateLimit } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
-  // 10 bids per minute per IP — prevents DB/unique-cents exhaustion
   const rl = rateLimit(request, { maxRequests: 10, windowMs: 60_000, prefix: 'payment-initiate' });
   if (rl) return rl;
 
@@ -20,11 +20,7 @@ export async function POST(request: NextRequest) {
     await ensureDatabase();
     const body = await request.json();
     const {
-      spotNumber,
-      bidAmount, // USD value
-      brandName,
-      website = '',
-      logoUrl = '',
+      bidId,
       walletAddress,
       token = 'USDC',
       chainId = 1,
@@ -32,31 +28,18 @@ export async function POST(request: NextRequest) {
 
     // ── Validate inputs ──────────────────────────────────────────────────
 
-    if (!spotNumber || !bidAmount || !brandName || !walletAddress) {
+    if (!bidId || !walletAddress) {
       return NextResponse.json(
-        { success: false, error: 'Missing required fields: spotNumber, bidAmount, brandName, walletAddress' },
+        { success: false, error: 'Missing required fields: bidId, walletAddress' },
         { status: 400 }
       );
     }
 
-    // XSS prevention: validate URL fields
-    if (website && !/^https?:\/\//i.test(website)) {
-      return NextResponse.json(
-        { success: false, error: 'Website must start with http:// or https://' },
-        { status: 400 }
-      );
-    }
-    if (logoUrl && !/^https:\/\//i.test(logoUrl)) {
-      return NextResponse.json(
-        { success: false, error: 'Logo URL must start with https://' },
-        { status: 400 }
-      );
-    }
+    const normalizedWallet = typeof walletAddress === 'string' ? walletAddress.trim() : '';
 
-    const parsedAmount = parseFloat(bidAmount);
-    if (isNaN(parsedAmount) || parsedAmount < 5) {
+    if (!isAddress(normalizedWallet)) {
       return NextResponse.json(
-        { success: false, error: 'Minimum bid is $5' },
+        { success: false, error: 'Enter a valid EVM wallet address' },
         { status: 400 }
       );
     }
@@ -71,9 +54,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate chain
+    const requestedChainId = typeof chainId === 'number' ? chainId : Number(chainId);
     const resolvedChainId = tokenConfig.isNative
-      ? NATIVE_TOKEN_CHAIN[token] || chainId
-      : chainId;
+      ? NATIVE_TOKEN_CHAIN[token] || requestedChainId
+      : requestedChainId;
 
     if (!CHAINS[resolvedChainId]) {
       return NextResponse.json(
@@ -98,36 +82,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ── Find spot and validate bid ───────────────────────────────────────
+    // ── Look up bid ───────────────────────────────────────────────────────
 
-    const num = parseInt(String(spotNumber));
-    const spot = await db.spot.findFirst({
-      where: { number: num },
-      include: { board: true },
+    const bid = await db.bid.findUnique({
+      where: { id: bidId },
+      include: { spot: { include: { board: true } } },
     });
 
-    if (!spot) {
+    if (!bid) {
       return NextResponse.json(
-        { success: false, error: `Spot #${spotNumber} not found` },
+        { success: false, error: 'Bid not found' },
         { status: 404 }
       );
     }
 
-    if (spot.board.status === 'PAUSED') {
+    if (bid.status !== 'AWAITING_PAYMENT') {
       return NextResponse.json(
-        { success: false, error: 'The board is currently paused' },
-        { status: 400 }
-      );
-    }
-
-    // Must outbid current holder by at least $5
-    const minBid = spot.currentBid > 0
-      ? spot.currentBid + 5
-      : spot.startingPrice;
-
-    if (parsedAmount < minBid) {
-      return NextResponse.json(
-        { success: false, error: `Bid must be at least $${minBid}. Current highest: $${spot.currentBid}` },
+        { success: false, error: 'This bid already has a payment or has expired' },
         { status: 400 }
       );
     }
@@ -142,7 +113,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Count pending payments per address, pick the one with fewer
     const counts = await Promise.all(
       addresses.map(addr =>
         db.payment.count({
@@ -160,9 +130,10 @@ export async function POST(request: NextRequest) {
     }
     const depositAddress = addresses[minIdx];
 
-    // ── Make amount unique to avoid cross-match between concurrent payments ──
+    // ── Make amount unique ───────────────────────────────────────────────
 
-    // Query pending payments on this deposit address + token to find used amounts
+    const parsedAmount = bid.amount;
+
     const pendingPayments = await db.payment.findMany({
       where: {
         depositAddress: depositAddress.toLowerCase(),
@@ -174,15 +145,12 @@ export async function POST(request: NextRequest) {
     });
     const usedAmounts = new Set(pendingPayments.map(p => p.tokenAmount));
 
-    // Add a small random offset (0.01–0.99) to make amount unique per address.
-    // Try up to 100 times to find an unused amount.
     let uniqueAmount = parsedAmount;
     let tokenAmount: string;
     let attempts = 0;
     do {
-      // First attempt uses exact amount; subsequent attempts add random cents
       if (attempts > 0) {
-        const centsOffset = Math.floor(Math.random() * 99) + 1; // 1–99
+        const centsOffset = Math.floor(Math.random() * 99) + 1;
         uniqueAmount = parsedAmount + centsOffset / 100;
       }
       tokenAmount = humanToBaseUnits(uniqueAmount, token).toString();
@@ -204,16 +172,12 @@ export async function POST(request: NextRequest) {
       depositAddress
     );
 
-    // ── Create bid + payment records ─────────────────────────────────────
+    // ── Update bid + create payment ──────────────────────────────────────
 
-    const bid = await db.bid.create({
+    await db.bid.update({
+      where: { id: bidId },
       data: {
-        spotId: spot.id,
-        walletAddress: walletAddress.toLowerCase(),
-        brandName,
-        website: website || null,
-        logoUrl: logoUrl || null,
-        amount: parsedAmount,
+        walletAddress: normalizedWallet.toLowerCase(),
         status: 'PENDING',
       },
     });
@@ -226,11 +190,11 @@ export async function POST(request: NextRequest) {
         tokenAmount,
         usdAmount: parsedAmount,
         depositAddress: depositAddress.toLowerCase(),
-        walletAddress: walletAddress.toLowerCase(),
+        walletAddress: normalizedWallet.toLowerCase(),
         status: 'PENDING',
         startBlock,
         startBalance,
-        expiresAt: new Date(Date.now() + 30 * 60 * 1000), // 30 min
+        expiresAt: new Date(Date.now() + 30 * 60 * 1000),
       },
     });
 

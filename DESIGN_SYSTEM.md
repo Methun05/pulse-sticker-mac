@@ -329,9 +329,9 @@ Animated number stepper with spring-physics digit transitions. Used for bid amou
 
 **Visual spec:**
 - Layout: `flex items-center justify-center gap-4`
-- Buttons: `h-11 w-11 rounded-full bg-[var(--surface)] text-[var(--ink-2)]`
+- Buttons: `h-8 w-8 rounded-full bg-[var(--surface)] text-[var(--ink-2)]`, icons `h-3.5 w-3.5`
 - Button hover: scale 1.05 (motion spring), tap: scale 0.92
-- Digits: `text-[48px] font-bold tracking-[-0.02em] text-[var(--ink)]`
+- Digits: `text-[48px] font-bold tracking-[-0.03em] text-[var(--ink)]`, digit containers `w-7`, `gap-0`
 - Dollar sign prefix baked into digit array
 - Each digit animates independently (spring: stiffness 200, damping 16, mass 1.2)
 - No disabled styling on buttons (always look enabled)
@@ -361,18 +361,24 @@ Multi-step modal for placing bids on MacBook spots. Megapot-inspired dialog styl
 - `border border-[var(--hairline)]`, `bg-white`
 - `max-h-[95dvh]`, `sm:max-w-lg`
 - Entry: `animate-modal-in` (0.25s cubic-bezier scale+fade)
-- Close button: `h-9 w-9 rounded-full bg-[var(--surface)]` with filled X icon, top-right
-- No title in header (close button only)
+- Header: title left-center + close button absolute-right (same row)
+- Close button: `h-9 w-9 rounded-full bg-[var(--surface)]` with filled X icon
 
 **Step 1 — Form:**
-- Centered title: "Place your bid" (20px bold) + subtitle (13px ink-3)
-- Stepper below title (48px digits)
+- Title "Place your bid" (20px bold) in header row, centered
+- Stepper directly below header (48px digits, tight spacing)
+- No subtitle text
 - `mb-6` gap separates stepper section from form fields
 - Fields (each `space-y-4`): Brand name* → Website → Email → X handle → LogoUpload
-- Single "Place Bid" button: `rounded-full bg-[var(--blue)]`
-- Terms text below button: `text-[12px] text-[var(--ink-3)]`
+- Two side-by-side payment buttons (`flex gap-3`):
+  - "Pay with Crypto": `rounded-full bg-[var(--blue)]` (primary)
+  - "Pay with Fiat": `rounded-full border border-[var(--hairline)]` (secondary/outlined)
+- Each button submits the form and routes directly to its payment step (no method selection screen)
+- Terms text below buttons: `text-[12px] text-[var(--ink-3)]`
 
-**Steps 2-4:** Pay → Logo upload → Done / Expired (unchanged from original)
+**Step 2a — Crypto:** Token/chain/wallet form → payment instructions → poll → logo upload → done
+**Step 2b — Card:** Coming soon screen (placeholder)
+**Back buttons** in crypto/card return to form step
 
 **State:** brandName, website, xHandle, email, logoUrl, bidAmount (number), step, paymentData
 

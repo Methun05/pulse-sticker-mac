@@ -85,16 +85,16 @@ export function Stepper({
         whileTap={{ scale: 0.92 }}
         transition={{ type: 'spring', stiffness: 300, damping: 22 }}
         onClick={() => step(-1)}
-        className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[var(--surface)] text-[var(--ink-2)]"
+        className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[var(--surface)] text-[var(--ink-2)]"
       >
-        <HiMinus className="h-4 w-4" />
+        <HiMinus className="h-3.5 w-3.5" />
       </motion.button>
 
-      <div className="relative flex shrink-0 items-center justify-center gap-0.5 text-[48px] font-bold tracking-[-0.02em] text-[var(--ink)] perspective-midrange transform-3d">
+      <div className="relative flex shrink-0 items-center justify-center gap-0 text-[48px] font-bold tracking-[-0.03em] text-[var(--ink)] perspective-midrange transform-3d">
         {digits.map((digit, index) => (
           <div
             key={`${index}-${len}`}
-            className="relative w-6 transform-3d"
+            className="relative w-7 transform-3d"
             style={{ height: 50 }}
           >
             <AnimatePresence
@@ -130,9 +130,9 @@ export function Stepper({
         whileTap={{ scale: 0.92 }}
         transition={{ type: 'spring', stiffness: 300, damping: 22 }}
         onClick={() => step(1)}
-        className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[var(--surface)] text-[var(--ink-2)]"
+        className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full bg-[var(--surface)] text-[var(--ink-2)]"
       >
-        <HiPlus className="h-4 w-4" />
+        <HiPlus className="h-3.5 w-3.5" />
       </motion.button>
     </div>
   );

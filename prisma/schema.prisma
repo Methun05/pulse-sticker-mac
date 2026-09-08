@@ -30,6 +30,8 @@ model Spot {
   currentBrandName String?
   currentLogoUrl   String?
   currentWebsite   String?
+  currentEmail     String?
+  currentXHandle   String?
   currentWallet    String?  // wallet address of current highest bidder
   status           String   @default("AVAILABLE") // AVAILABLE, OCCUPIED
   bidCount         Int      @default(0)
@@ -47,6 +49,12 @@ model Bid {
   brandName     String
   website       String?
   logoUrl       String?
+  logoStatus    String   @default("NONE") // NONE, PENDING_REVIEW, APPROVED, REJECTED
+  uploadTokenHash String?
+  logoUploadedAt DateTime?
+  logoReviewedAt DateTime?
+  email         String?
+  xHandle       String?
   amount        Float    // USD value at time of bid
   status        String   @default("PENDING") // PENDING, CONFIRMED, OUTBID, CANCELLED
   createdAt     DateTime @default(now())

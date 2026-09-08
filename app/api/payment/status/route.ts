@@ -165,8 +165,11 @@ export async function GET(request: NextRequest) {
         data: {
           currentBid: payment.bid.amount,
           currentBrandName: payment.bid.brandName,
-          currentLogoUrl: payment.bid.logoUrl,
+          // Logos are only shown after an admin has approved the uploaded asset.
+          currentLogoUrl: null,
           currentWebsite: payment.bid.website,
+          currentEmail: payment.bid.email,
+          currentXHandle: payment.bid.xHandle,
           currentWallet: payment.bid.walletAddress,
           status: 'OCCUPIED',
           bidCount: { increment: 1 },

@@ -165,6 +165,7 @@ export default function AdminPage() {
 
   const auction = data?.auction;
   const spots = auction?.spots || [];
+  const pendingLogoBids = data?.pendingLogoBids || [];
   const totalRaised = spots.reduce((sum: number, s: any) => sum + (s.currentBid > 0 ? s.currentBid : 0), 0);
   const occupiedCount = spots.filter((s: any) => s.currentBid > 0).length;
 
@@ -207,6 +208,55 @@ export default function AdminPage() {
             <span>{statusMsg}</span>
             <button onClick={() => setStatusMsg(null)} className="text-zinc-400 hover:text-white">✕</button>
           </div>
+        )}
+
+        {pendingLogoBids.length > 0 && (
+          <section className="rounded-2xl bg-zinc-950 border border-amber-500/30 overflow-hidden">
+            <div className="p-4 border-b border-zinc-800 flex items-center justify-between">
+              <div>
+                <h2 className="font-bold text-sm text-white">Logo approvals</h2>
+                <p className="text-xs text-zinc-400 mt-1">Approved logos are then shown on the public board.</p>
+              </div>
+              <span className="text-xs font-mono text-amber-300">{pendingLogoBids.length} pending</span>
+            </div>
+            <div className="divide-y divide-zinc-800">
+              {pendingLogoBids.map((bid: any) => (
+                <div key={bid.id} className="p-4 flex flex-wrap items-center gap-4">
+                  {bid.logoUrl && (
+                    <img
+                      src={bid.logoUrl}
+                      alt={`${bid.brandName} logo awaiting approval`}
+                      className="w-16 h-16 rounded-lg bg-white object-contain p-1"
+                    />
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <div className="font-semibold text-white">{bid.brandName}</div>
+                    <div className="text-xs text-zinc-400 mt-1">
+                      Spot #{bid.spot.number} · {formatMoney(bid.amount)} · {bid.website || 'No website'}
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      disabled={loading}
+                      onClick={() => handleAdminAction('APPROVE_LOGO', { bidId: bid.id })}
+                      className="px-3 py-1.5 rounded-lg bg-white text-black text-xs font-bold disabled:opacity-50"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      type="button"
+                      disabled={loading}
+                      onClick={() => handleAdminAction('REJECT_LOGO', { bidId: bid.id })}
+                      className="px-3 py-1.5 rounded-lg border border-red-900/60 text-red-300 text-xs font-semibold disabled:opacity-50"
+                    >
+                      Reject
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
         )}
 
         {/* Metrics Grid */}
