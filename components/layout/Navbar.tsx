@@ -17,7 +17,7 @@ export function Navbar({ onBidClick, totalRaised }: NavbarProps) {
 
   return (
     <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl">
-      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between" style={{ paddingTop: 40, paddingBottom: 40 }}>
+      <div className="relative max-w-[80rem] mx-auto w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between h-14">
         {/* Logo */}
         <a href="/" className="text-xl font-semibold text-[var(--ink)] hover:opacity-80 transition-opacity">
           PulseSticker

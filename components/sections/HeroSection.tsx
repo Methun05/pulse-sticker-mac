@@ -43,7 +43,7 @@ export function HeroSection({ onBidClick, totalRaised, occupiedCount }: HeroSect
 
         {/* Subtext */}
         <p className="mt-4 text-[15px] sm:text-[17px] text-[var(--ink-2)] leading-relaxed max-w-[50ch] mx-auto">
-          Every sticker on this MacBook is a conversation starter. When someone asks, I onboard them, personally. 20% of all funds go straight back into growing the PulseChain community.
+          Promote your PulseChain project on my MacBook and support a community-driven mission to bring PulseChain into the real world.
         </p>
 
         {/* Manifesto link */}
