@@ -48,7 +48,7 @@ export function HeroSection({ onBidClick, totalRaised, occupiedCount }: HeroSect
         </p>
 
         {/* CTAs */}
-        <div className="mt-8 flex items-center justify-center gap-4">
+        <div className="mt-8 flex items-center justify-center gap-6">
           <FoilButton onClick={onBidClick}>
             Claim a spot
           </FoilButton>
