@@ -37,11 +37,9 @@ export function CountUp({ value, duration = 1.5, prefix = '$', className }: Coun
   }, [value, duration, startFrom]);
 
   return (
-    <TextMorph
-      className={cn('tabular-nums', className)}
-      style={{ display: 'inline-flex', justifyContent: 'center' }}
-    >
-      {prefix + display.toLocaleString()}
-    </TextMorph>
+    <span className={cn('tabular-nums', className)} style={{ display: 'inline-flex', justifyContent: 'center' }}>
+      {prefix}
+      <TextMorph>{display.toLocaleString()}</TextMorph>
+    </span>
   );
 }
