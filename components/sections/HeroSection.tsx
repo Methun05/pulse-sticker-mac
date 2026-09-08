@@ -14,7 +14,7 @@ interface HeroSectionProps {
 
 export function HeroSection({ onBidClick, totalRaised, occupiedCount }: HeroSectionProps) {
   return (
-    <section className="pt-20 pb-14 px-4 sm:px-6 text-center">
+    <section className="pt-16 pb-12 px-4 sm:px-6 text-center">
       <div className="max-w-2xl mx-auto">
         {/* The number that screams */}
         <div className="mb-6">
