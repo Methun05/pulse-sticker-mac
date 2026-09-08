@@ -3,7 +3,6 @@
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
 import { CountUp } from '@/components/ui/CountUp';
-import { FoilButton } from '@/components/ui/FoilButton';
 
 const FUNDING_GOAL = 500;
 
@@ -49,9 +48,12 @@ export function HeroSection({ onBidClick, totalRaised, occupiedCount }: HeroSect
 
         {/* CTAs */}
         <div className="mt-8 flex items-center justify-center gap-6">
-          <FoilButton onClick={onBidClick}>
+          <button
+            onClick={onBidClick}
+            className="inline-flex items-center justify-center h-14 px-8 rounded-[20px] bg-[var(--ink)] text-white text-lg font-semibold transition-all duration-300 hover:scale-105 active:scale-90"
+          >
             Claim a spot
-          </FoilButton>
+          </button>
           <a href="/manifesto" className="group inline-flex items-center gap-2 text-[14px] font-medium text-[var(--ink-3)] hover:text-[var(--ink-2)] transition-colors">
             <span className="flex flex-col gap-1">
               <span>Support the mission</span>
