@@ -46,16 +46,14 @@ export function HeroSection({ onBidClick, totalRaised, occupiedCount }: HeroSect
           Promote your PulseChain project on my MacBook and support a community-driven mission to bring PulseChain into the real world.
         </p>
 
-        {/* Manifesto link */}
-        <a href="/manifesto" className="mt-3 inline-block text-[14px] text-[var(--ink-3)] underline underline-offset-4 hover:text-[var(--ink-2)] transition-colors">
-          Read the manifesto
-        </a>
-
-        {/* Single CTA */}
-        <div className="mt-8 flex justify-center">
+        {/* CTAs */}
+        <div className="mt-8 flex flex-col items-center gap-4">
           <FoilButton onClick={onBidClick}>
             Claim a spot
           </FoilButton>
+          <a href="/manifesto" className="text-[14px] text-[var(--ink-3)] underline underline-offset-4 hover:text-[var(--ink-2)] transition-colors">
+            Support the mission
+          </a>
         </div>
 
       </div>

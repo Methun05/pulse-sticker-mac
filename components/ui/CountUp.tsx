@@ -11,8 +11,9 @@ interface CountUpProps {
   className?: string;
 }
 
-export function CountUp({ value, duration = 2, prefix = '$', className }: CountUpProps) {
-  const [display, setDisplay] = useState(0);
+export function CountUp({ value, duration = 1.5, prefix = '$', className }: CountUpProps) {
+  const startFrom = Math.max(0, value - 20);
+  const [display, setDisplay] = useState(startFrom);
   const hasAnimated = useRef(false);
 
   useEffect(() => {
@@ -21,18 +22,19 @@ export function CountUp({ value, duration = 2, prefix = '$', className }: CountU
 
     const start = performance.now();
     const durationMs = duration * 1000;
+    const range = value - startFrom;
 
     function tick(now: number) {
       const elapsed = now - start;
       const progress = Math.min(elapsed / durationMs, 1);
       // ease out quad
       const eased = 1 - (1 - progress) * (1 - progress);
-      setDisplay(Math.round(eased * value));
+      setDisplay(Math.round(startFrom + eased * range));
       if (progress < 1) requestAnimationFrame(tick);
     }
 
     requestAnimationFrame(tick);
-  }, [value, duration]);
+  }, [value, duration, startFrom]);
 
   return (
     <TextMorph
