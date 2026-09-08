@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { ArrowRight } from 'lucide-react';
 import { CountUp } from '@/components/ui/CountUp';
 import { FoilButton } from '@/components/ui/FoilButton';
 
@@ -29,7 +30,7 @@ export function HeroSection({ onBidClick, totalRaised, occupiedCount }: HeroSect
             </div>
             <div className="mt-1.5 h-1 rounded-full bg-[var(--surface)] overflow-hidden">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-[#00BFFF] via-[#8B5CF6] to-[#EC4899]"
+                className="h-full rounded-full bg-gradient-to-r from-[#00BFFF] via-[#8B5CF6] to-[#EC4899] animate-progress-fill"
                 style={{ width: `${Math.min((200 / FUNDING_GOAL) * 100, 100)}%` }}
               />
             </div>
@@ -51,8 +52,12 @@ export function HeroSection({ onBidClick, totalRaised, occupiedCount }: HeroSect
           <FoilButton onClick={onBidClick}>
             Claim a spot
           </FoilButton>
-          <a href="/manifesto" className="text-[14px] text-[var(--ink-3)] underline underline-offset-4 hover:text-[var(--ink-2)] transition-colors">
-            Support the mission
+          <a href="/manifesto" className="group inline-flex items-center gap-2 text-[14px] font-medium text-[var(--ink-3)] hover:text-[var(--ink-2)] transition-colors">
+            <span className="flex flex-col gap-1">
+              <span>Support the mission</span>
+              <span className="h-px w-full origin-left scale-x-0 bg-[var(--ink-3)] transition-transform duration-500 ease-[cubic-bezier(.16,1,.3,1)] group-hover:scale-x-100" />
+            </span>
+            <ArrowRight size={14} strokeWidth={2} className="transition-transform duration-500 ease-[cubic-bezier(.16,1,.3,1)] group-hover:translate-x-0.5" />
           </a>
         </div>
 
