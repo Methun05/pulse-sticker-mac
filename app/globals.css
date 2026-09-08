@@ -211,6 +211,22 @@ body {
   transition: background 0.12s linear;
 }
 
+/* Modal entry animation */
+@keyframes modal-in {
+  from { opacity: 0; scale: 0.95; }
+  to { opacity: 1; scale: 1; }
+}
+.animate-modal-in { animation: modal-in 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+
+/* Dialog shadow (megapot pattern) */
+.shadow-dialog { box-shadow: 0px 8px 36px rgba(55, 65, 81, 0.15); }
+
+/* Thin scrollbar for modal */
+.thin-scrollbar::-webkit-scrollbar { width: 4px; }
+.thin-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.thin-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 4px; }
+
+
 @keyframes depth-foil-drift {
   from { background-position: 0% center; }
   to { background-position: 100% center; }

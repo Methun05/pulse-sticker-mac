@@ -18,22 +18,22 @@
 
 ## Color Palette
 
-> Colors TBD — will be decided in a separate session. Placeholder tokens below.
+Defined in `app/globals.css` `:root`. All components MUST use these tokens — no hardcoded hex.
 
 ```
---background:    TBD (white base)
---surface:       TBD (light gray sections)
---ink:           TBD (primary text)
---ink-2:         TBD (secondary text)
---ink-3:         TBD (muted text)
---hairline:      TBD (borders/dividers)
---primary:       TBD (main CTA color)
---primary-hover: TBD
---green:         TBD (success states)
---amber:         TBD (warning states)
---red:           TBD (error states)
---pulse-green:   #00ff55 (PulseChain brand)
---pulse-green-2: #00ff99 (PulseChain brand secondary)
+--background:    #ffffff
+--surface:       #f5f5f7   (light gray backgrounds, button fills)
+--ink:           #1d1d1f   (primary text, focus borders)
+--ink-2:         #56565c   (secondary text)
+--ink-3:         #86868b   (muted text, placeholders, icons)
+--hairline:      #d2d2d7   (borders, dividers, default input borders)
+--blue:          #0071e3   (primary CTA)
+--blue-hover:    #0077ed   (primary CTA hover)
+--green:         #1a7f37   (success states)
+--amber:         #d97706   (warning states)
+--red:           #e40014   (error states)
+--pulse-green:   #00ff55   (PulseChain brand)
+--pulse-green-2: #00ff99   (PulseChain brand secondary)
 ```
 
 ---
@@ -118,10 +118,16 @@ This is the ONLY call-to-action on the page. Every other interactive element is 
   - Ease: power2.out
   - Format: dollar sign prefix, comma separators
 
-### CSS Animations
+### CSS Animations (globals.css)
 - Foil button: ambient rainbow drift (7s), cursor-reactive shine/glare
 - Spot pulse: hover glow on available spots
 - FAQ accordion: grid-template-rows transition (0.3s)
+- Modal entry: `animate-modal-in` — 0.25s cubic-bezier(0.16, 1, 0.3, 1) scale+fade
+
+### CSS Utility Classes (globals.css)
+- `.shadow-dialog` — `0px 8px 36px rgba(55, 65, 81, 0.15)` (megapot dialog shadow)
+- `.thin-scrollbar` — 4px scrollbar for modal content
+- `.animate-modal-in` — modal entry animation
 
 ### No over-animation
 - No scroll-triggered reveals on every section
@@ -144,11 +150,13 @@ This is the ONLY call-to-action on the page. Every other interactive element is 
 
 | Package | Purpose | Status |
 |---------|---------|--------|
-| Space Grotesk | Font | To install (next/font/google) |
+| Space Grotesk | Font | Installed (next/font/google) |
 | GSAP | CountUp animation | To install (npm) |
-| clsx | Class merging | Already installed |
-| tailwind-merge | Tailwind class dedup | Already installed |
-| lucide-react | Icons | Already installed |
+| clsx | Class merging | Installed |
+| tailwind-merge | Tailwind class dedup | Installed |
+| lucide-react | Icons | Installed |
+| motion | Stepper digit animations (motion/react) | Installed |
+| react-icons | Stepper +/- icons (HiMinus, HiPlus) | Installed |
 
 ---
 
@@ -177,7 +185,10 @@ components/
   ui/
     Accordion.tsx      -- Rounded card accordion (FAQ, info disclosure)
     BlockieAvatar.tsx   -- Deterministic pixelated avatar (crypto identicon)
+    FloatingInput.tsx  -- Floating label text input (var tokens)
     FoilButton.tsx     -- Reusable foil depth button component
+    LogoUpload.tsx     -- Drag & drop logo upload, dual-mode (var tokens)
+    Stepper.tsx        -- Animated number stepper (motion + react-icons)
     CountUp.tsx        -- GSAP number animation component
 
 lib/
@@ -257,6 +268,114 @@ import { BlockieAvatar } from '@/components/ui/BlockieAvatar';
 <BlockieAvatar seed="0x1234...abcd" size={48} />
 ```
 
+### FloatingInput (`components/ui/FloatingInput.tsx`)
+
+Text input with a floating label that animates up when focused or filled.
+
+**Visual spec:**
+- `rounded-xl`, `border border-[var(--hairline)]`, focus: `border-[var(--ink)]`
+- Input: `px-4 py-4`, `text-sm text-[var(--ink)]`, `bg-transparent`
+- Label resting: `left-4 top-4 text-sm text-[var(--ink-3)]`
+- Label active (focus/filled): `-top-2.5 left-3 text-xs bg-white px-1 text-[var(--ink)]`
+- Label transition: `all 0.2s` via Tailwind peer utilities
+
+**Props:** Extends `React.InputHTMLAttributes<HTMLInputElement>` plus:
+- `label`: `string` — floating label text
+
+**Usage:**
+```tsx
+import { FloatingInput } from '@/components/ui/FloatingInput';
+
+<FloatingInput label="Brand name *" value={name} onChange={e => setName(e.target.value)} required />
+<FloatingInput label="Website" type="url" value={url} onChange={e => setUrl(e.target.value)} />
+```
+
+### LogoUpload (`components/ui/LogoUpload.tsx`)
+
+Drag & drop file upload zone that uploads to `/api/upload` (Vercel Blob). Dual-mode component.
+
+**Visual spec:**
+- `rounded-xl`, `border border-dashed border-[var(--hairline)]`, `hover:border-[var(--ink)]`
+- Drag over: `border-[var(--ink)] bg-[var(--surface)]`
+- Upload icon: `stroke="var(--ink-3)"`, text: `text-[var(--ink-3)]`
+- Preview (value mode): 40px thumbnail + "Click to replace" text
+- Error: `text-[var(--red)]`
+- Accepts: PNG, JPG, WEBP, max 500KB
+
+**Two usage modes:**
+
+1. **Value mode** (Step 1 form — pre-payment):
+   - Props: `value: string | null`, `onChange: (url: string | null) => void`
+   - Uploads without bidId, returns URL via onChange, shows preview
+
+2. **Submit mode** (Step 3 — post-payment):
+   - Props: `bidId: string`, `uploadToken: string`, `onSubmitted: () => void`
+   - Uploads with bidId/uploadToken, calls onSubmitted on success
+
+**Usage:**
+```tsx
+import { LogoUpload } from '@/components/ui/LogoUpload';
+
+// Value mode (form)
+<LogoUpload value={logoUrl} onChange={setLogoUrl} />
+
+// Submit mode (post-payment)
+<LogoUpload bidId={id} uploadToken={token} onSubmitted={() => setStep('done')} />
+```
+
+### Stepper (`components/ui/Stepper.tsx`)
+
+Animated number stepper with spring-physics digit transitions. Used for bid amount selection.
+
+**Visual spec:**
+- Layout: `flex items-center justify-center gap-4`
+- Buttons: `h-11 w-11 rounded-full bg-[var(--surface)] text-[var(--ink-2)]`
+- Button hover: scale 1.05 (motion spring), tap: scale 0.92
+- Digits: `text-[48px] font-bold tracking-[-0.02em] text-[var(--ink)]`
+- Dollar sign prefix baked into digit array
+- Each digit animates independently (spring: stiffness 200, damping 16, mass 1.2)
+- No disabled styling on buttons (always look enabled)
+
+**Dependencies:** `motion` (motion/react), `react-icons` (HiMinus, HiPlus)
+
+**Props:**
+- `value?`: `number` — controlled value
+- `defaultValue?`: `number` (default `0`)
+- `min?`: `number` (default `0`)
+- `max?`: `number` (default `999`)
+- `onChange?`: `(val: number) => void`
+
+**Usage:**
+```tsx
+import { Stepper } from '@/components/ui/Stepper';
+
+<Stepper value={bidAmount} min={5} max={10000} onChange={setBidAmount} />
+```
+
+### BidModal (`components/spots/BidModal.tsx`)
+
+Multi-step modal for placing bids on MacBook spots. Megapot-inspired dialog styling.
+
+**Visual spec (shell):**
+- `rounded-[36px]`, `shadow-dialog` (0px 8px 36px rgba(55,65,81,0.15))
+- `border border-[var(--hairline)]`, `bg-white`
+- `max-h-[95dvh]`, `sm:max-w-lg`
+- Entry: `animate-modal-in` (0.25s cubic-bezier scale+fade)
+- Close button: `h-9 w-9 rounded-full bg-[var(--surface)]` with filled X icon, top-right
+- No title in header (close button only)
+
+**Step 1 — Form:**
+- Centered title: "Place your bid" (20px bold) + subtitle (13px ink-3)
+- Stepper below title (48px digits)
+- `mb-6` gap separates stepper section from form fields
+- Fields (each `space-y-4`): Brand name* → Website → Email → X handle → LogoUpload
+- Single "Place Bid" button: `rounded-full bg-[var(--blue)]`
+- Terms text below button: `text-[12px] text-[var(--ink-3)]`
+
+**Steps 2-4:** Pay → Logo upload → Done / Expired (unchanged from original)
+
+**State:** brandName, website, xHandle, email, logoUrl, bidAmount (number), step, paymentData
+
 ---
 
 ## Rules
@@ -266,5 +385,5 @@ import { BlockieAvatar } from '@/components/ui/BlockieAvatar';
 3. Foil button is hero-only. Don't put it everywhere.
 4. White body, dark hero section only
 5. No over-engineering. Simple components, no premature abstractions.
-6. Colors will be decided separately — use CSS variable tokens, not hardcoded hex.
+6. Use CSS variable tokens (`var(--ink)`, `var(--surface)`, etc.) — NEVER hardcoded hex in components.
 7. Test every change visually before pushing.
