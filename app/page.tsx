@@ -7,6 +7,7 @@ import { HeroSection } from '@/components/sections/HeroSection';
 import { MacBookMockup, SpotData } from '@/components/laptop/MacBookMockup';
 import { SpotTable } from '@/components/spots/SpotTable';
 import { BidModal } from '@/components/spots/BidModal';
+import { WhySponsorSection } from '@/components/sections/WhySponsorSection';
 import { HowItWorksSection } from '@/components/sections/HowItWorksSection';
 import { FAQSection } from '@/components/sections/FAQSection';
 
@@ -70,6 +71,7 @@ export default function HomePage() {
         <SpotTable spots={spots} onBidClick={handleSpotSelect} />
       </section>
 
+      <WhySponsorSection />
       <HowItWorksSection />
       <FAQSection />
       <Footer />

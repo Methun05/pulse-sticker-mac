@@ -70,7 +70,7 @@ body {
   padding: 0 32px;
   border: none;
   border-radius: 999px;
-  font: 600 17px/1 var(--font-space-grotesk), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font: 600 17px/1 var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
   letter-spacing: 0.01em;
   color: #fff;
   cursor: pointer;

@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { Space_Grotesk } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/react";
 
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-space-grotesk",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
   display: "swap",
 });
@@ -45,8 +45,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${spaceGrotesk.variable} scroll-smooth`}>
-      <body className="bg-white text-[#1d1d1f] font-[var(--font-space-grotesk),system-ui,-apple-system,sans-serif] antialiased min-h-screen">
+    <html lang="en" className={`${inter.variable} scroll-smooth`}>
+      <body className="bg-white text-[#1d1d1f] font-[var(--font-inter),system-ui,-apple-system,sans-serif] antialiased min-h-screen">
         {children}
         <Analytics />
       </body>
