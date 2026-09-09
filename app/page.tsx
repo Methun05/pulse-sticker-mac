@@ -4,12 +4,13 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { HeroSection } from '@/components/sections/HeroSection';
-import { MacBookMockup, SpotData } from '@/components/laptop/MacBookMockup';
-import { SpotTable } from '@/components/spots/SpotTable';
-import { BidModal } from '@/components/spots/BidModal';
+import { SpotData } from '@/components/laptop/MacBookMockup';
+import { EcosystemSection } from '@/components/sections/EcosystemSection';
+import { LeaderboardSection } from '@/components/sections/LeaderboardSection';
 import { WhySponsorSection } from '@/components/sections/WhySponsorSection';
-import { HowItWorksSection } from '@/components/sections/HowItWorksSection';
+import { MyMacBookSection } from '@/components/sections/MyMacBookSection';
 import { FAQSection } from '@/components/sections/FAQSection';
+import { BidModal } from '@/components/spots/BidModal';
 
 export default function HomePage() {
   const [spots, setSpots] = useState<SpotData[]>([]);
@@ -61,19 +62,11 @@ export default function HomePage() {
         occupiedCount={occupiedCount}
       />
 
-      {/* MacBook mockup */}
-      <section className="pb-4 sm:pb-8">
-        <MacBookMockup spots={spots} onSelectSpot={handleSpotSelect} />
-      </section>
-
-      {/* Spot table */}
-      <section className="py-8 sm:py-12">
-        <SpotTable spots={spots} onBidClick={handleSpotSelect} />
-      </section>
-
+      <EcosystemSection />
+      <LeaderboardSection spots={spots} onSelectSpot={handleSpotSelect} />
       <WhySponsorSection />
-      <HowItWorksSection />
-      <FAQSection />
+      <MyMacBookSection />
+<FAQSection />
       <Footer />
 
       {/* Bid modal */}

@@ -143,7 +143,7 @@ function SpotCell({
 }
 
 // ── Lid view: CSS gradient surface + spot grid (exact brandmylaptop pattern) ──
-function LidView({
+export function LidView({
   spots,
   onSelectSpot,
 }: {
@@ -243,7 +243,7 @@ function LidView({
 //   x: 31.5% – 68.5%  y: 65% – 92%
 // Spots (98×87 at brandmylaptop scale) = ~11.4% × 15.5% of image
 // Left zone: 5.5% – 30%   Right zone: 70% – 94.5%
-function InsideView({
+export function InsideView({
   spots,
   onSelectSpot,
 }: {

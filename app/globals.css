@@ -7,8 +7,8 @@
   --ink-2: #56565c;
   --ink-3: #86868b;
   --hairline: #d2d2d7;
-  --blue: #0071e3;
-  --blue-hover: #0077ed;
+  --accent: #1d1d1f;
+  --accent-hover: #3a3a3f;
   --green: #1a7f37;
   --amber: #d97706;
   --red: #e40014;
@@ -43,8 +43,64 @@ body {
 }
 
 ::selection {
-  background: var(--blue);
+  background: var(--accent);
   color: #fff;
+}
+
+/* Display title gradient (vertical dark-to-steel) */
+.display-title-gradient {
+  background: linear-gradient(180deg, #111827 0%, #3d578d 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Logo marquee ─────────────────────────────────── */
+
+.marquee-wrapper {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0px,
+    black 100px,
+    black calc(100% - 100px),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0px,
+    black 100px,
+    black calc(100% - 100px),
+    transparent 100%
+  );
+}
+
+.marquee-track {
+  display: flex;
+  gap: 48px;
+  width: max-content;
+  animation: marquee-scroll 30s linear infinite;
+  will-change: transform;
+}
+
+.marquee-track:hover {
+  animation-play-state: paused;
+}
+
+.marquee-set {
+  display: flex;
+  align-items: center;
+  gap: 48px;
+  flex-shrink: 0;
+}
+
+@keyframes marquee-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(calc(-50% - 24px)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track { animation: none; }
 }
 
 /* Spot pulse animation */
@@ -70,7 +126,7 @@ body {
   padding: 0 32px;
   border: none;
   border-radius: 999px;
-  font: 600 17px/1 var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font: 600 17px/1 var(--font-neue-haas), ui-sans-serif, system-ui, -apple-system, sans-serif;
   letter-spacing: 0.01em;
   color: #fff;
   cursor: pointer;

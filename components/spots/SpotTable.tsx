@@ -100,10 +100,10 @@ export function SpotTable({ spots, onBidClick }: SpotTableProps) {
                 {/* Action button */}
                 <button
                   onClick={() => onBidClick(spot)}
-                  className={`shrink-0 rounded-full px-4 py-1.5 text-[13px] font-medium transition-colors cursor-pointer ${
+                  className={`shrink-0 rounded-full px-4 py-1.5 text-[13px] font-medium transition-all duration-300 cursor-pointer ${
                     isOccupied
-                      ? 'border border-[var(--blue)] text-[var(--blue)] hover:bg-[var(--blue)] hover:text-white'
-                      : 'bg-[var(--blue)] text-white hover:bg-[var(--blue-hover)]'
+                      ? 'border border-[var(--hairline)] text-[var(--ink)] hover:bg-[var(--surface)]'
+                      : 'bg-[var(--ink)] text-white hover:opacity-90'
                   }`}
                 >
                   {isOccupied ? 'Outbid' : 'Bid'}
@@ -118,7 +118,7 @@ export function SpotTable({ spots, onBidClick }: SpotTableProps) {
       <div className="text-center mt-4">
         <Link
           href="/history"
-          className="text-[13px] text-[var(--blue)] font-medium hover:underline"
+          className="text-[13px] text-[var(--accent)] font-medium hover:underline"
         >
           View full bid history →
         </Link>

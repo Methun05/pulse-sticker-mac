@@ -263,7 +263,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
                   type="button"
                   disabled={loading}
                   onClick={() => handleSubmit('crypto')}
-                  className="flex-1 rounded-full bg-[var(--blue)] hover:bg-[var(--blue-hover)] disabled:opacity-50 text-white py-3 text-[15px] font-medium transition-colors"
+                  className="flex-1 rounded-full bg-[var(--accent)] hover:bg-[var(--accent-hover)] disabled:opacity-50 text-white py-3 text-[15px] font-medium transition-colors"
                 >
                   {loading ? 'Placing bid...' : 'Pay with Crypto'}
                 </button>
@@ -303,7 +303,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
                         onClick={() => setToken(t)}
                         className={`flex-1 rounded-xl border py-2.5 text-[14px] font-medium transition-colors ${
                           token === t
-                            ? 'border-[var(--blue)] bg-[var(--blue)]/5 text-[var(--blue)]'
+                            ? 'border-[var(--accent)] bg-[var(--accent)]/5 text-[var(--accent)]'
                             : 'border-[var(--hairline)] bg-[var(--surface)] text-[var(--ink)] hover:border-[var(--ink-3)]'
                         }`}
                       >
@@ -324,7 +324,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
                         onClick={() => setChainId(c.id)}
                         className={`rounded-xl border px-4 py-2.5 text-[13px] font-medium transition-colors ${
                           chainId === c.id
-                            ? 'border-[var(--blue)] bg-[var(--blue)]/5 text-[var(--blue)]'
+                            ? 'border-[var(--accent)] bg-[var(--accent)]/5 text-[var(--accent)]'
                             : 'border-[var(--hairline)] bg-[var(--surface)] text-[var(--ink)] hover:border-[var(--ink-3)]'
                         }`}
                       >
@@ -351,7 +351,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full rounded-full bg-[var(--blue)] hover:bg-[var(--blue-hover)] disabled:opacity-50 text-white py-3 text-[15px] font-medium transition-colors mt-5"
+                className="w-full rounded-full bg-[var(--accent)] hover:bg-[var(--accent-hover)] disabled:opacity-50 text-white py-3 text-[15px] font-medium transition-colors mt-5"
               >
                 {loading ? 'Processing...' : 'Continue'}
               </button>
@@ -392,8 +392,8 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
           {step === 'pay' && paymentData && (
             <div className="space-y-4">
               <div className="text-center">
-                <div className="w-12 h-12 rounded-full bg-[var(--blue)]/10 flex items-center justify-center mx-auto mb-3">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+                <div className="w-12 h-12 rounded-full bg-[var(--accent)]/10 flex items-center justify-center mx-auto mb-3">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
                 </div>
                 <h4 className="text-[17px] font-semibold text-[var(--ink)]">Send payment</h4>
                 <p className="text-[13px] text-[var(--ink-3)] mt-1">Time remaining: <span className="font-mono font-medium text-[var(--ink)]">{timeLeft}</span></p>
@@ -454,7 +454,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
               </p>
               <button
                 onClick={onClose}
-                className="mt-6 rounded-full bg-[var(--blue)] text-white px-6 py-2.5 text-[14px] font-medium hover:bg-[var(--blue-hover)] transition-colors"
+                className="mt-6 rounded-full bg-[var(--accent)] text-white px-6 py-2.5 text-[14px] font-medium hover:bg-[var(--accent-hover)] transition-colors"
               >
                 Done
               </button>

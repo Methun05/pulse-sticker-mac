@@ -4,7 +4,7 @@ import React from 'react';
 import { SpotData } from '@/components/laptop/MacBookMockup';
 
 const SIZE_BADGE: Record<string, { label: string; color: string }> = {
-  'XL': { label: 'XL', color: 'bg-[var(--blue)]/10 text-[var(--blue)]' },
+  'XL': { label: 'XL', color: 'bg-[var(--accent)]/10 text-[var(--accent)]' },
   'Large': { label: 'L', color: 'bg-[var(--green)]/10 text-[var(--green)]' },
   'Medium': { label: 'M', color: 'bg-[var(--amber)]/10 text-[var(--amber)]' },
   'Small': { label: 'S', color: 'bg-[var(--ink-3)]/10 text-[var(--ink-3)]' },
@@ -42,7 +42,7 @@ export function SpotCard({ spot, onBidClick }: SpotCardProps) {
             </span>
           </div>
           {spot.website && (
-            <a href={spot.website} target="_blank" rel="noopener noreferrer" className="text-[12px] text-[var(--blue)] hover:underline truncate block">
+            <a href={spot.website} target="_blank" rel="noopener noreferrer" className="text-[12px] text-[var(--accent)] hover:underline truncate block">
               {spot.website.replace(/^https?:\/\//, '')}
             </a>
           )}
@@ -66,8 +66,8 @@ export function SpotCard({ spot, onBidClick }: SpotCardProps) {
           onClick={() => onBidClick(spot)}
           className={`rounded-full px-4 py-1.5 text-[13px] font-medium transition-colors ${
             isOccupied
-              ? 'border border-[var(--blue)] text-[var(--blue)] hover:bg-[var(--blue)] hover:text-white'
-              : 'bg-[var(--blue)] text-white hover:bg-[var(--blue-hover)]'
+              ? 'border border-[var(--accent)] text-[var(--accent)] hover:bg-[var(--accent)] hover:text-white'
+              : 'bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)]'
           }`}
         >
           {isOccupied ? 'Outbid' : 'Bid now'}

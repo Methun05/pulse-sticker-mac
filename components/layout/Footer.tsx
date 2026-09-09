@@ -13,9 +13,9 @@ export function Footer() {
             <span className="text-[var(--ink-3)]">· PulseChain community leaderboard</span>
           </div>
           <div className="flex items-center gap-6 text-[13px] text-[var(--ink-3)]">
-            <a href="#spots" className="hover:text-[var(--ink)] transition-colors">Spots</a>
-            <a href="#how-it-works" className="hover:text-[var(--ink)] transition-colors">How it works</a>
             <a href="#faq" className="hover:text-[var(--ink)] transition-colors">FAQ</a>
+            <a href="/terms" className="hover:text-[var(--ink)] transition-colors">Terms</a>
+            <a href="/privacy" className="hover:text-[var(--ink)] transition-colors">Privacy</a>
           </div>
         </div>
         <p className="mt-6 text-center text-[12px] text-[var(--ink-3)]">

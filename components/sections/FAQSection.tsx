@@ -5,29 +5,39 @@ import { Accordion } from '@/components/ui/Accordion';
 
 const FAQS = [
   {
-    title: 'How does this work?',
+    title: 'Why would a project sponsor this?',
     content:
-      'Pick a spot on the MacBook, pay with stablecoins, and your logo gets physically stickered on the laptop. Your brand stays visible at meetups, coworking spaces, and events.',
+      'Your logo goes on a real MacBook that travels to meetups, coworking spaces, and events. It is real-world visibility for your project outside of crypto Twitter and Telegram.',
   },
   {
-    title: 'What tokens are accepted?',
+    title: 'What happens if I\'m outbid?',
     content:
-      'USDC, USDT, and DAI on Ethereum, Base, BSC, Polygon, and PulseChain. Native tokens like ETH and BNB are coming soon.',
+      'Your sticker gets replaced by the new highest bidder. Payments are non-refundable, your project had visibility for the time you held the spot.',
   },
   {
-    title: 'Can I be outbid?',
+    title: 'Where does the money go?',
     content:
-      "Yes. This is an ongoing leaderboard — anyone can outbid you at any time. When outbid, your sticker is replaced with the new highest bidder's logo.",
+      'Twenty percent is reinvested into PulseChain community initiatives. The rest covers sticker production, shipping, and running the platform.',
   },
   {
-    title: 'How long does verification take?',
+    title: 'Is this a real MacBook?',
     content:
-      'Usually under 2 minutes. The system checks the blockchain for your transfer every few seconds. You have a 30-minute window to complete payment.',
+      'Yes. It is my personal MacBook that I use every day. The stickers are physically printed and placed on the lid.',
   },
   {
-    title: 'What happens if I get outbid?',
+    title: 'How often is the MacBook updated?',
     content:
-      'Payments are non-refundable. Your brand had visibility for the period you held the spot — think of it as advertising for the time your sticker was live.',
+      'Stickers are updated whenever a new bid is confirmed. I print and apply the new sticker within a few days of payment verification.',
+  },
+  {
+    title: 'Can anyone contribute?',
+    content:
+      'Anyone can bid on a spot. You do not need to represent a project, you just need a wallet and stablecoins on a supported chain.',
+  },
+  {
+    title: 'Why only PulseChain projects?',
+    content:
+      'This started as a PulseChain community initiative. The goal is to bring visibility to PulseChain ecosystem projects specifically.',
   },
 ];
 

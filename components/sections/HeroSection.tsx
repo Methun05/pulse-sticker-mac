@@ -14,10 +14,10 @@ interface HeroSectionProps {
 
 export function HeroSection({ onBidClick, totalRaised, occupiedCount }: HeroSectionProps) {
   return (
-    <section className="pt-16 pb-12 px-4 sm:px-6 text-center">
+    <section className="pt-16 pb-8 px-4 sm:px-6 text-center">
       <div className="max-w-2xl mx-auto">
         {/* The number that screams */}
-        <div className="mb-6">
+        <div className="mb-8">
           <CountUp
             value={200}
             className="text-[80px] sm:text-[100px] font-bold tracking-[-0.04em] leading-none text-[var(--ink)]"
@@ -37,29 +37,26 @@ export function HeroSection({ onBidClick, totalRaised, occupiedCount }: HeroSect
         </div>
 
         {/* Headline */}
-        <h1 className="text-[clamp(1.75rem,5vw,3rem)] font-medium tracking-[-0.04em] leading-[1.1] text-[var(--ink)]">
+        <h1 className="text-[clamp(1.75rem,5vw,3rem)] font-medium tracking-[-0.01em] leading-[1.1] text-[var(--ink)]">
           Taking PulseChain to every<br />corner of the world.
         </h1>
 
         {/* Subtext */}
-        <p className="mt-4 text-[15px] sm:text-[17px] text-[var(--ink-2)] leading-relaxed max-w-[50ch] mx-auto">
-          Promote your PulseChain project on my MacBook and support a community-driven mission to bring PulseChain into the real world.
+        <p className="mt-5 text-[15px] sm:text-[17px] text-[var(--ink-2)] leading-relaxed max-w-[50ch] mx-auto">
+          Promote your PulseChain project through a community-driven initiative bringing PulseChain into the real world.
         </p>
 
         {/* CTAs */}
         <div className="mt-8 flex items-center justify-center gap-6">
           <button
             onClick={onBidClick}
-            className="inline-flex items-center justify-center h-14 px-8 rounded-[20px] bg-[var(--ink)] text-white text-lg font-semibold transition-all duration-300 hover:scale-105 active:scale-90"
+            className="inline-flex items-center justify-center h-10 px-4 rounded-[14px] bg-[var(--ink)] text-white text-base font-semibold transition-all duration-300 hover:scale-[1.04] active:scale-[0.92]"
           >
             Claim a spot
           </button>
-          <a href="/manifesto" className="group inline-flex items-center gap-2 text-[14px] font-medium text-[var(--ink-3)] hover:text-[var(--ink-2)] transition-colors">
-            <span className="flex flex-col gap-1">
-              <span>Support the mission</span>
-              <span className="h-px w-full origin-left scale-x-0 bg-[var(--ink-3)] transition-transform duration-500 ease-[cubic-bezier(.16,1,.3,1)] group-hover:scale-x-100" />
-            </span>
-            <ArrowRight size={14} strokeWidth={2} className="transition-transform duration-500 ease-[cubic-bezier(.16,1,.3,1)] group-hover:translate-x-0.5" />
+          <a href="/manifesto" className="group inline-flex items-center gap-1.5 text-[14px] font-medium text-[var(--ink-2)] hover:text-[var(--ink)] transition-colors">
+            <span>Support the mission</span>
+            <ArrowRight size={14} strokeWidth={2} className="transition-transform duration-300 group-hover:translate-x-0.5" />
           </a>
         </div>
 
