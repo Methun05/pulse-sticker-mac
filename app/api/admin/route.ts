@@ -32,20 +32,10 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    const pendingLogoBids = await db.bid.findMany({
-      where: { status: 'CONFIRMED', logoStatus: 'PENDING_REVIEW' },
-      orderBy: { logoUploadedAt: 'asc' },
-      include: {
-        spot: true,
-        payment: { select: { token: true, chainId: true, txHash: true, confirmedAt: true } },
-      },
-    });
-
     return NextResponse.json({
       success: true,
       board,
       payments: allPayments,
-      pendingLogoBids,
     });
   } catch (error: unknown) {
     console.error('Admin GET error:', error);
@@ -85,52 +75,6 @@ export async function POST(request: NextRequest) {
         data: { startingPrice: parseFloat(startingPrice) },
       });
       return NextResponse.json({ success: true, message: 'Spot price updated' });
-    }
-
-    if (action === 'APPROVE_LOGO') {
-      const { bidId } = body;
-      if (typeof bidId !== 'string') {
-        return NextResponse.json({ error: 'Invalid bid ID' }, { status: 400 });
-      }
-
-      const approved = await db.$transaction(async (tx) => {
-        const bid = await tx.bid.findFirst({
-          where: { id: bidId, status: 'CONFIRMED', logoStatus: 'PENDING_REVIEW', logoUrl: { not: null } },
-          select: { id: true, spotId: true, logoUrl: true, brandName: true },
-        });
-        if (!bid || !bid.logoUrl) return null;
-
-        await tx.bid.update({
-          where: { id: bid.id },
-          data: { logoStatus: 'APPROVED', logoReviewedAt: new Date() },
-        });
-        await tx.spot.update({
-          where: { id: bid.spotId },
-          data: { currentLogoUrl: bid.logoUrl },
-        });
-        return bid;
-      });
-
-      if (!approved) {
-        return NextResponse.json({ error: 'Logo is no longer awaiting approval' }, { status: 409 });
-      }
-      return NextResponse.json({ success: true, message: `${approved.brandName}'s logo approved` });
-    }
-
-    if (action === 'REJECT_LOGO') {
-      const { bidId } = body;
-      if (typeof bidId !== 'string') {
-        return NextResponse.json({ error: 'Invalid bid ID' }, { status: 400 });
-      }
-
-      const rejected = await db.bid.updateMany({
-        where: { id: bidId, status: 'CONFIRMED', logoStatus: 'PENDING_REVIEW' },
-        data: { logoStatus: 'REJECTED', logoReviewedAt: new Date() },
-      });
-      if (rejected.count === 0) {
-        return NextResponse.json({ error: 'Logo is no longer awaiting approval' }, { status: 409 });
-      }
-      return NextResponse.json({ success: true, message: 'Logo rejected. The bidder can submit a replacement.' });
     }
 
     if (action === 'RESET') {

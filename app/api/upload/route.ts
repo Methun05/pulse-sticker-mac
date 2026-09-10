@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
     const base64 = Buffer.from(bytes).toString('base64');
     const dataUrl = `data:${mimeMap[extension]};base64,${base64}`;
 
-    const updatedBid = await db.bid.update({
+    await db.bid.update({
       where: { id: bid.id },
       data: {
         logoUrl: dataUrl,
@@ -79,14 +79,21 @@ export async function POST(request: NextRequest) {
         logoUploadedAt: new Date(),
         logoReviewedAt: new Date(),
       },
+    });
+
+    // Re-read fresh from DB to avoid race with callback that may have set status concurrently
+    const freshBid = await db.bid.findUnique({
+      where: { id: bid.id },
       select: { id: true, status: true, spotId: true },
     });
 
-    // Update the spot's logo immediately regardless of bid status
-    await db.spot.update({
-      where: { id: updatedBid.spotId },
-      data: { currentLogoUrl: dataUrl },
-    });
+    // Only update the spot's logo if the bid is confirmed
+    if (freshBid?.status === 'CONFIRMED') {
+      await db.spot.update({
+        where: { id: freshBid.spotId },
+        data: { currentLogoUrl: dataUrl },
+      });
+    }
 
     return NextResponse.json({ success: true, status: 'APPROVED' });
   } catch (error: unknown) {

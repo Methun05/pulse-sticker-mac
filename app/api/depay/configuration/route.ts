@@ -27,6 +27,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
   }
 
+  if (!RECEIVER || RECEIVER === '0x0000000000000000000000000000000000000000') {
+    return NextResponse.json({ error: 'Payment receiver not configured' }, { status: 503 });
+  }
+
   const payload = JSON.parse(body);
   const bidId = payload?.bidId;
 
@@ -39,6 +43,12 @@ export async function POST(request: NextRequest) {
 
   if (!bid || bid.status !== 'AWAITING_PAYMENT') {
     return NextResponse.json({ error: 'Bid not found or not awaiting payment' }, { status: 400 });
+  }
+
+  // Reject expired bids (30-minute window)
+  const ageMs = Date.now() - new Date(bid.createdAt).getTime();
+  if (ageMs > 30 * 60 * 1000) {
+    return NextResponse.json({ error: 'Bid has expired' }, { status: 400 });
   }
 
   const configuration = {

@@ -14,7 +14,7 @@ declare global {
   }
 }
 
-type Step = 'form' | 'card' | 'logo' | 'done' | 'expired';
+type Step = 'form' | 'card' | 'logo' | 'done';
 
 interface BidModalProps {
   spot: SpotData | null;
@@ -44,6 +44,8 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
       setStep('form');
       setError('');
       setLogoFile(null);
+      setBrandName('');
+      setWebsite('');
       setXHandle('');
       setEmail('');
       setBidId(null);
@@ -244,8 +246,8 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
           {step === 'logo' && bidId && uploadToken && (
             <div className="space-y-4">
               <div className="text-center">
-                <h4 className="text-[20px] font-bold text-[var(--ink)]">Payment confirmed</h4>
-                <p className="text-[14px] text-[var(--ink-2)] mt-2">Upload your logo to display it on the board.</p>
+                <h4 className="text-[20px] font-bold text-[var(--ink)]">Payment processing</h4>
+                <p className="text-[14px] text-[var(--ink-2)] mt-2">Your payment is being confirmed on-chain. Upload your logo while you wait.</p>
               </div>
               <LogoUpload
                 bidId={bidId}
@@ -275,24 +277,6 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
             </div>
           )}
 
-          {/* Expired */}
-          {step === 'expired' && (
-            <div className="text-center py-4">
-              <div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--red)" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-              </div>
-              <h4 className="text-[20px] font-bold text-[var(--ink)]">Payment expired</h4>
-              <p className="text-[14px] text-[var(--ink-2)] mt-2">
-                The 30-minute window has passed. Please try again.
-              </p>
-              <button
-                onClick={() => setStep('form')}
-                className="mt-6 rounded-full border border-[var(--hairline)] px-6 py-2.5 text-[14px] font-medium hover:border-[var(--ink-3)] transition-colors"
-              >
-                Try again
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </div>

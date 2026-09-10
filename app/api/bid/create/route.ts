@@ -17,7 +17,6 @@ export async function POST(request: NextRequest) {
       website = '',
       email = '',
       xHandle = '',
-      logoUrl = '',
     } = body;
 
     // ── Validate inputs ──────────────────────────────────────────────────
@@ -115,6 +114,16 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // ── Expire stale AWAITING_PAYMENT bids for this spot ─────────────────
+    await db.bid.updateMany({
+      where: {
+        spotId: spot.id,
+        status: 'AWAITING_PAYMENT',
+        createdAt: { lt: new Date(Date.now() - 30 * 60 * 1000) },
+      },
+      data: { status: 'EXPIRED' },
+    });
 
     // ── Create bid record ─────────────────────────────────────────────────
 

@@ -28,24 +28,6 @@ export async function POST(request: NextRequest) {
 
   await ensureDatabase();
 
-  const bid = await db.bid.findUnique({
-    where: { id: bidId },
-    include: { spot: { include: { board: true } } },
-  });
-
-  if (!bid) {
-    console.error('[DePay callback] Bid not found:', bidId);
-    return NextResponse.json({ error: 'Bid not found' }, { status: 404 });
-  }
-
-  // Idempotent: if already confirmed, return success
-  if (bid.status === 'CONFIRMED') {
-    const responseBody = JSON.stringify({});
-    const response = NextResponse.json({});
-    response.headers.set('x-signature', signResponse(responseBody));
-    return response;
-  }
-
   // Map DePay blockchain name to chainId
   const CHAIN_IDS: Record<string, number> = {
     ethereum: 1,
@@ -55,7 +37,43 @@ export async function POST(request: NextRequest) {
   };
   const chainId = CHAIN_IDS[blockchain] || 0;
 
-  await db.$transaction(async (tx) => {
+  const result = await db.$transaction(async (tx) => {
+    // Fetch bid inside transaction for serializable read
+    const bid = await tx.bid.findUnique({
+      where: { id: bidId },
+      include: { spot: { include: { board: true } } },
+    });
+
+    if (!bid) {
+      return { error: 'Bid not found', status: 404 } as const;
+    }
+
+    // Idempotent: if already confirmed, return success
+    if (bid.status === 'CONFIRMED') {
+      return { alreadyConfirmed: true } as const;
+    }
+
+    // Guard: reject if bid is no longer in a valid state (EXPIRED, CANCELLED, etc.)
+    if (bid.status !== 'AWAITING_PAYMENT' && bid.status !== 'CONFIRMED') {
+      console.warn(`[DePay callback] Rejecting invalid bid status: ${bidId} (status: ${bid.status})`);
+      return { error: 'Bid is no longer valid', status: 400 } as const;
+    }
+
+    // Reject expired bids (30-minute window safety net)
+    const ageMs = Date.now() - new Date(bid.createdAt).getTime();
+    if (ageMs > 30 * 60 * 1000) {
+      console.warn(`[DePay callback] Bid expired: ${bidId} (age ${Math.round(ageMs / 60000)}min)`);
+      return { error: 'Bid has expired', status: 400 } as const;
+    }
+
+    // Guard: reject if someone already outbid this amount
+    if (bid.spot.currentBid > 0 && bid.amount <= bid.spot.currentBid) {
+      console.warn(
+        `[DePay callback] Rejecting bid ${bid.id}: amount $${bid.amount} <= current $${bid.spot.currentBid} on Spot #${bid.spot.number}`
+      );
+      return { error: 'Outbid by a higher bid', status: 409 } as const;
+    }
+
     // Create Payment record
     await tx.payment.create({
       data: {
@@ -114,10 +132,30 @@ export async function POST(request: NextRequest) {
       where: { id: bid.spot.boardId },
       data: { totalRaised },
     });
+
+    return {
+      confirmed: true,
+      spotNumber: bid.spot.number,
+      brandName: bid.brandName,
+      amount: bid.amount,
+    } as const;
   });
 
+  // Handle transaction results
+  if ('error' in result) {
+    console.error(`[DePay callback] ${result.error}: ${bidId}`);
+    return NextResponse.json({ error: result.error }, { status: result.status });
+  }
+
+  if ('alreadyConfirmed' in result) {
+    const responseBody = JSON.stringify({});
+    const response = NextResponse.json({});
+    response.headers.set('x-signature', signResponse(responseBody));
+    return response;
+  }
+
   console.log(
-    `[DePay callback] Confirmed: Spot #${bid.spot.number} → ${bid.brandName} at $${bid.amount} (${blockchain}, tx: ${transaction})`
+    `[DePay callback] Confirmed: Spot #${result.spotNumber} → ${result.brandName} at $${result.amount} (${blockchain}, tx: ${transaction})`
   );
 
   const responseBody = JSON.stringify({});

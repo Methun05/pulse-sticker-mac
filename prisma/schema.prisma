@@ -21,7 +21,7 @@ model Spot {
   id               String   @id @default(cuid())
   boardId          String
   board            Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
-  number           Int      @unique // 1-10
+  number           Int      @unique // 1-18
   position         String // "Center Lid", "Upper Left", etc.
   size             String // "XL", "Large", "Medium", "Small"
   tier             String   @default("PHYSICAL") // PHYSICAL (top 10 get sticker), DIGITAL (board only)
@@ -56,7 +56,7 @@ model Bid {
   email           String?
   xHandle         String?
   amount          Float // USD value at time of bid
-  status          String    @default("PENDING") // PENDING, CONFIRMED, OUTBID, CANCELLED
+  status          String    @default("PENDING") // AWAITING_PAYMENT, CONFIRMED, OUTBID, EXPIRED
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   payment         Payment?
@@ -67,8 +67,8 @@ model Payment {
   bidId          String    @unique
   bid            Bid       @relation(fields: [bidId], references: [id], onDelete: Cascade)
   txHash         String?   @unique
-  chainId        Int // 1=Ethereum, 56=BSC, 369=PulseChain
-  token          String // "ETH", "USDC", "USDT", "DAI", "BNB"
+  chainId        Int // 1=Ethereum, 56=BSC, 137=Polygon, 8453=Base
+  token          String // "USDC" (via DePay)
   tokenAmount    String // raw amount in base units (wei, micro-USDC, etc.)
   usdAmount      Float // USD equivalent at time of payment
   depositAddress String // which of our addresses received it
