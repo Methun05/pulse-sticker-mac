@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
   }
 
   const payload = JSON.parse(body);
-  const bidId = payload?.payload?.bidId;
+  const bidId = payload?.bidId;
 
   if (!bidId) {
     return NextResponse.json({ error: 'Missing bidId in payload' }, { status: 400 });
