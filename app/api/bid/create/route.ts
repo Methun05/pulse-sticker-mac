@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
     }
 
     const num = typeof spotNumber === 'number' ? spotNumber : Number(spotNumber);
-    if (!Number.isInteger(num) || num < 1 || num > 10) {
+    if (!Number.isInteger(num) || num < 1 || num > 18) {
       return NextResponse.json(
         { success: false, error: 'Invalid spot number' },
         { status: 400 }

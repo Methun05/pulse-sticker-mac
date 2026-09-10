@@ -256,9 +256,10 @@ export function InsideView({
     return () => ro.disconnect();
   }, []);
 
-  // Left 4 spots (2×2 grid), Right 4 spots (2×2 grid)
-  const leftSpots = spots.slice(0, 4);
-  const rightSpots = spots.slice(4, 8);
+  // Inside spots are 11-18: left 4 (11-14), right 4 (15-18)
+  const insideSpots = spots.filter((s) => s.number >= 11 && s.number <= 18);
+  const leftSpots = insideSpots.filter((s) => s.number >= 11 && s.number <= 14);
+  const rightSpots = insideSpots.filter((s) => s.number >= 15 && s.number <= 18);
 
   const spotGrid = {
     display: 'grid' as const,
