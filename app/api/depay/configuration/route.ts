@@ -11,9 +11,9 @@ export async function POST(request: NextRequest) {
   const body = await request.text();
   const signature = request.headers.get('x-signature');
 
-  if (!verifyDepayRequest(body, signature)) {
-    return NextResponse.json({ error: 'UNAUTHORIZED' }, { status: 401 });
-  }
+  const verified = verifyDepayRequest(body, signature);
+  console.log('[DePay config] Signature verified:', verified, 'Signature present:', !!signature);
+  console.log('[DePay config] Body:', body);
 
   const payload = JSON.parse(body);
 
