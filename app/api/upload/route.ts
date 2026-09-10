@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
 
     const uploadTokenHash = createHash('sha256').update(uploadToken).digest('hex');
     const bid = await db.bid.findFirst({
-      where: { id: bidId, uploadTokenHash, status: 'CONFIRMED' },
+      where: { id: bidId, uploadTokenHash, status: { in: ['CONFIRMED', 'AWAITING_PAYMENT'] } },
       select: { id: true, logoStatus: true },
     });
     if (!bid) {
