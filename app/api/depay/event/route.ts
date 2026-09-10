@@ -11,7 +11,10 @@ export async function POST(request: NextRequest) {
   const signature = request.headers.get('x-signature');
 
   const verified = verifyDepayRequest(body, signature);
-  console.log('[DePay event]', 'Verified:', verified, 'Body:', body);
+  if (!verified) {
+    return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+  }
+  console.log('[DePay event]', 'Body:', body);
 
   const responseData = {};
   const responseBody = JSON.stringify(responseData);

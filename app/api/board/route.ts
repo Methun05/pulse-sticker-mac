@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { db, ensureDatabase } from '@/lib/db';
-import { TOKENS, CHAINS } from '@/lib/crypto';
 
 export const dynamic = 'force-dynamic';
 
@@ -100,18 +99,6 @@ export async function GET() {
         amount: b.amount,
         spotNumber: b.spot.number,
         timestamp: b.updatedAt.toISOString(),
-      })),
-      supportedTokens: Object.entries(TOKENS).map(([key, t]) => ({
-        symbol: key,
-        decimals: t.decimals,
-        isNative: t.isNative,
-        chains: t.isNative
-          ? [CHAINS[key === 'ETH' ? 1 : key === 'BNB' ? 56 : 1]]
-          : Object.keys(t.contractAddresses).map(cid => CHAINS[parseInt(cid)]).filter(Boolean),
-      })),
-      supportedChains: Object.values(CHAINS).map(c => ({
-        chainId: c.chainId,
-        name: c.name,
       })),
     });
   } catch (error: unknown) {
