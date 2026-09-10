@@ -82,7 +82,7 @@ function SpotCell({
         className="group relative flex h-full w-full flex-col items-center justify-center gap-1 cursor-pointer transition-opacity hover:opacity-75"
         style={{ borderRadius: radius }}
       >
-        {spot.logoUrl ? (
+        {spot.logoUrl && (
           <img
             src={spot.logoUrl}
             alt={spot.brandName || ''}
@@ -90,13 +90,6 @@ function SpotCell({
             decoding="async"
             className="max-h-[56%] max-w-[88%] shrink-0 object-contain"
           />
-        ) : (
-          <span
-            className="max-w-full text-center font-semibold leading-tight text-[#1d1d1f] [overflow-wrap:anywhere]"
-            style={{ fontSize: `calc(var(${cssVar}, 100cqw) * 0.016)` }}
-          >
-            {spot.brandName}
-          </span>
         )}
         <span
           className="font-medium text-[#1a7f37]"

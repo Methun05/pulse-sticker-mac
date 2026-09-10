@@ -82,13 +82,11 @@ export async function POST(request: NextRequest) {
       select: { id: true, status: true, spotId: true },
     });
 
-    // If bid is confirmed, update the spot's logo immediately
-    if (updatedBid.status === 'CONFIRMED') {
-      await db.spot.update({
-        where: { id: updatedBid.spotId },
-        data: { currentLogoUrl: dataUrl },
-      });
-    }
+    // Update the spot's logo immediately regardless of bid status
+    await db.spot.update({
+      where: { id: updatedBid.spotId },
+      data: { currentLogoUrl: dataUrl },
+    });
 
     return NextResponse.json({ success: true, status: 'APPROVED' });
   } catch (error: unknown) {
