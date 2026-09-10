@@ -51,21 +51,55 @@
   .hero-inner { display: flex; width: 100%; flex-direction: column; align-items: center; gap: 16px; }
   .hero-content { display: flex; width: 100%; max-width: 64rem; flex-direction: column; align-items: center; }
 
-  /* Sticker zone */
-  .sticker-zone {
+  /* Outlined gradient number — matching reference */
+  .hero-raised {
     position: relative;
-    width: 100%;
-    max-width: 32rem;
-    min-height: 160px;
-    display: flex;
-    flex-direction: column;
+    z-index: 2;
+    font-size: 80px;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    font-style: italic;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 24px 0 8px;
+    filter: drop-shadow(3px 4px 6px rgba(20, 70, 40, 0.3));
+  }
+  @media (min-width: 640px) { .hero-raised { font-size: 100px; } }
+
+  .hero-raised-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
-  .hero-raised { position: relative; z-index: 2; font-size: 80px; font-weight: 700; letter-spacing: -0.04em; line-height: 1; color: var(--ink); font-variant-numeric: tabular-nums; display: flex; align-items: center; justify-content: center; pointer-events: none; }
-  @media (min-width: 640px) { .hero-raised { font-size: 100px; } }
+  /* Back layer: thick dark green stroke */
+  .hero-raised-shadow {
+    position: absolute;
+    top: 0; left: 0;
+    font: inherit;
+    letter-spacing: inherit;
+    line-height: inherit;
+    font-variant-numeric: tabular-nums;
+    color: #2d7a50;
+    -webkit-text-stroke: 3px #2d7a50;
+    paint-order: stroke fill;
+    z-index: 0;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  /* Front layer: mint-to-green gradient fill */
+  .hero-raised-front {
+    position: relative;
+    z-index: 1;
+    background: linear-gradient(180deg, #4db87a 0%, #8fe8b0 40%, #d4f7e2 75%, #f0fcf4 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
 
   .hero-progress { margin-top: 6px; max-width: 16rem; width: 100%; position: relative; z-index: 2; pointer-events: none; }
   .hero-progress-labels { display: flex; justify-content: space-between; font-size: 13px; }
@@ -73,33 +107,6 @@
   .hero-progress-labels .goal-label { color: var(--ink-3); }
   .hero-progress-bar { margin-top: 6px; height: 4px; border-radius: 9999px; background: var(--surface); overflow: hidden; }
   .hero-progress-fill { height: 100%; border-radius: 9999px; background: linear-gradient(to right, #00BFFF, #8B5CF6, #EC4899); width: 40%; }
-
-  /* ── Compact pill chips ── */
-  .chip {
-    position: absolute;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 4px 10px;
-    border-radius: 999px;
-    font-family: var(--font);
-    font-size: 11px;
-    font-weight: 600;
-    white-space: nowrap;
-    color: #fff;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    z-index: 3;
-    letter-spacing: 0.01em;
-    cursor: grab;
-    touch-action: none;
-    user-select: none;
-    -webkit-user-select: none;
-  }
-  .chip:active, .chip.dragging { cursor: grabbing; }
-  .chip.dragging { box-shadow: 0 6px 16px rgba(0,0,0,0.14); z-index: 10; }
-  .chip-dot { width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,0.5); flex-shrink: 0; }
-
-  @media (prefers-reduced-motion: reduce) { .chip { transition: none !important; } }
 
   .hero-headline { margin-top: 24px; font-size: clamp(1.75rem, 5vw, 3rem); font-weight: 500; letter-spacing: -0.04em; line-height: 1.1; color: var(--ink); text-wrap: balance; }
   .hero-sub { margin-top: 12px; font-size: 15px; font-weight: 400; line-height: 1.6; color: var(--ink-2); max-width: 52ch; }
@@ -110,19 +117,16 @@
   .hero-secondary-link .ubar { display: block; height: 1px; width: 100%; background: var(--ink-3); transform: scaleX(0); transform-origin: left; transition: transform 0.5s cubic-bezier(.16,1,.3,1); }
   .hero-secondary-link:hover .ubar { transform: scaleX(1); }
 
-  /* ═══ FOIL BUTTON ═══ */
-  .depth-btn { position: relative; display: inline-flex; align-items: center; justify-content: center; height: 44px; padding: 0 22px; border: none; border-radius: 999px; font-family: var(--font); font-size: 15px; font-weight: 500; line-height: 1; letter-spacing: 0.01em; color: #fff; cursor: pointer; isolation: isolate; overflow: hidden; transition: filter 0.2s, box-shadow 0.2s; }
-  .depth-btn::before, .depth-btn::after { content: ""; position: absolute; inset: 0; border-radius: inherit; z-index: 1; pointer-events: none; }
-  .depth-label { position: relative; z-index: 2; display: inline-flex; align-items: center; }
-  .depth-foil { --glare-x:50%; --glare-y:50%; --pointer-x:50%; --pointer-y:50%; --shine-angle:135deg; color: #14202e; text-shadow: 0 1px 0 rgba(255,255,255,0.5); background: linear-gradient(135deg, #eee 0%, #dcdcdc 40%, #c9c9c9 72%, #e8e8e8 100%); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.5), inset 0 1px 1px rgba(255,255,255,0.7), inset 0 -2px 4px rgba(60,70,90,0.3), 0 3px 10px rgba(30,38,56,0.3); }
-  .depth-foil-l { position: absolute; inset: -48%; z-index: 1; background-repeat: no-repeat; pointer-events: none; }
-  .depth-foil-base { background: linear-gradient(112deg, transparent 22%, rgba(0,220,255,0.4) 30%, rgba(80,255,190,0.34) 36%, rgba(190,255,80,0.26) 41%, rgba(255,230,70,0.24) 47%, rgba(255,70,180,0.36) 55%, rgba(150,90,255,0.36) 63%, rgba(60,120,255,0.3) 70%, transparent 80%); background-size: 240% 100%; filter: saturate(1.3) contrast(1.25); animation: foil-drift 7s ease-in-out infinite alternate; }
-  .depth-foil-film { background: radial-gradient(ellipse at 20% 30%, rgba(255,70,180,0.34) 0%, transparent 48%), radial-gradient(ellipse at 70% 20%, rgba(0,220,255,0.34) 0%, transparent 52%), radial-gradient(ellipse at 78% 74%, rgba(80,255,190,0.34) 0%, transparent 56%); background-size: 150% 150%, 160% 160%, 145% 145%; filter: blur(0.4px) saturate(1.4); mix-blend-mode: screen; opacity: 0.7; animation: foil-drift 9s ease-in-out infinite alternate-reverse; }
-  .depth-foil-pearl { z-index:2; inset:0; background: radial-gradient(120% 120% at var(--glare-x) var(--glare-y), rgba(230,238,245,0.6) 0%, rgba(205,217,226,0.2) 26%, transparent 58%); mix-blend-mode: soft-light; opacity: 0.95; transition: background 0.12s linear; }
-  .depth-foil-shine { z-index:4; inset:0; background: linear-gradient(var(--shine-angle), transparent 30%, rgba(226,235,242,0.5) 48%, rgba(0,124,255,0.1) 58%, rgba(255,0,147,0.1) 66%, transparent 82%); background-size: 200% 100%; background-position: var(--pointer-x) center; mix-blend-mode: screen; opacity: 0.6; transition: background-position 0.12s linear; }
-  .depth-foil-glare { z-index:5; inset:0; background: radial-gradient(circle at var(--glare-x) var(--glare-y), rgba(230,238,245,0.55) 0%, rgba(205,218,228,0.16) 10%, transparent 38%); mix-blend-mode: screen; opacity: 0.5; transition: background 0.12s linear; }
-  @keyframes foil-drift { from { background-position: 0% center; } to { background-position: 100% center; } }
-  @media (prefers-reduced-motion: reduce) { .depth-foil-base, .depth-foil-film { animation: none; } }
+  /* Hero CTA — solid minimal button */
+  .hero-cta {
+    display: inline-flex; align-items: center; justify-content: center;
+    height: 56px; padding: 0 32px; border: none; border-radius: 20px;
+    background: var(--ink); color: #fff;
+    font-family: var(--font); font-size: 18px; font-weight: 600;
+    cursor: pointer; transition: all 0.3s;
+  }
+  .hero-cta:hover { transform: scale(1.05); }
+  .hero-cta:active { transform: scale(0.9); }
 
   .rest-placeholder { height: 60vh; display: flex; align-items: center; justify-content: center; color: var(--ink-3); font-size: 14px; border-top: 1px solid var(--hairline); }
 </style>
@@ -145,37 +149,23 @@
   </nav>
 
   <section class="hero"><div class="hero-inner"><div class="hero-content">
-    <div class="sticker-zone" id="stickerZone">
-      <div class="hero-raised" id="raised">$0</div>
-      <div class="hero-progress">
-        <div class="hero-progress-labels"><span class="raised-label">$200 raised</span><span class="goal-label">goal $500</span></div>
-        <div class="hero-progress-bar"><div class="hero-progress-fill"></div></div>
-      </div>
+    <!-- 3D extruded raised number -->
+    <div class="hero-raised-wrap hero-raised">
+      <span class="hero-raised-shadow" id="raisedShadow">$0</span>
+      <span class="hero-raised-front" id="raised">$0</span>
+    </div>
 
-      <div class="chip" data-chip style="background:#E53935; left:3%; top:10%; transform:rotate(-7deg)">
-        <span class="chip-dot"></span>3 spots claimed
-      </div>
-      <div class="chip" data-chip style="background:#5C6BC0; right:2%; top:6%; transform:rotate(5deg)">
-        <span class="chip-dot"></span>7 spots left
-      </div>
-      <div class="chip" data-chip style="background:#00897B; left:5%; bottom:6%; transform:rotate(4deg)">
-        <span class="chip-dot"></span>5 chains
-      </div>
-      <div class="chip" data-chip style="background:#FB8C00; right:4%; bottom:10%; transform:rotate(-5deg)">
-        <span class="chip-dot"></span>20% to community
-      </div>
+    <div class="hero-progress">
+      <div class="hero-progress-labels"><span class="raised-label">$200 raised</span><span class="goal-label">goal $500</span></div>
+      <div class="hero-progress-bar"><div class="hero-progress-fill"></div></div>
     </div>
 
     <h1 class="hero-headline">Taking PulseChain to the World</h1>
     <p class="hero-sub">Promote your PulseChain project on my MacBook and support a community-driven mission to bring PulseChain into the real world.</p>
   </div>
   <div class="hero-cta-wrap">
-    <button class="depth-btn depth-foil" id="foilBtn">
-      <span class="depth-foil-l depth-foil-base"></span><span class="depth-foil-l depth-foil-film"></span>
-      <span class="depth-foil-l depth-foil-pearl"></span><span class="depth-label">Claim your spot</span>
-      <span class="depth-foil-l depth-foil-shine"></span><span class="depth-foil-l depth-foil-glare"></span>
-    </button>
-    <a href="/manifesto" class="hero-secondary-link"><span><span>Read my mission</span><span class="ubar"></span></span>
+    <button class="hero-cta">Claim a spot</button>
+    <a href="/manifesto" class="hero-secondary-link"><span><span>Support the mission</span><span class="ubar"></span></span>
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
     </a>
   </div></div></section>
@@ -183,51 +173,24 @@
   <div class="rest-placeholder">↓ Rest of the page ↓</div>
 
 <script>
-  // CountUp
-  !function(){var el=document.getElementById('raised'),t=200,d=1500,f=180,s=performance.now();function tick(n){var p=Math.min((n-s)/d,1),e=1-(1-p)*(1-p);el.textContent='$'+Math.round(f+e*(t-f));if(p<1)requestAnimationFrame(tick)}requestAnimationFrame(tick)}();
-
-  // Foil button
-  var btn=document.getElementById('foilBtn');
-  btn.onmousemove=function(e){var r=btn.getBoundingClientRect(),x=((e.clientX-r.left)/r.width)*100,y=((e.clientY-r.top)/r.height)*100,a=Math.atan2(y-50,x-50)*(180/Math.PI)+90;btn.style.setProperty('--pointer-x',x+'%');btn.style.setProperty('--pointer-y',y+'%');btn.style.setProperty('--glare-x',x+'%');btn.style.setProperty('--glare-y',y+'%');btn.style.setProperty('--shine-angle',a+'deg')};
-  btn.onmouseleave=function(){['--pointer-x','--pointer-y','--glare-x','--glare-y'].forEach(function(p){btn.style.setProperty(p,'50%')});btn.style.setProperty('--shine-angle','135deg')};
+  // CountUp — syncs both shadow and front layers
+  !function(){
+    var front = document.getElementById('raised');
+    var shadow = document.getElementById('raisedShadow');
+    var target = 200, dur = 1500, from = 180, t0 = performance.now();
+    function tick(now) {
+      var p = Math.min((now - t0) / dur, 1);
+      var e = 1 - (1 - p) * (1 - p);
+      var txt = '$' + Math.round(from + e * (target - from));
+      front.textContent = txt;
+      shadow.textContent = txt;
+      if (p < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }();
 
   // Mobile menu
   function toggleMobile(){var m=document.getElementById('mobileMenu'),o=m.classList.toggle('open');document.getElementById('menu-icon').style.display=o?'none':'block';document.getElementById('close-icon').style.display=o?'block':'none'}
-
-  // ── Chip physics ──
-  !function(){
-    var zone=document.getElementById('stickerZone');
-    var chips=zone.querySelectorAll('[data-chip]');
-    var FR=0.92,BN=0.5,TH=0.8,items=[];
-
-    chips.forEach(function(el){
-      var r=el.getBoundingClientRect(),zr=zone.getBoundingClientRect();
-      var rot=parseFloat((el.style.transform.match(/rotate\((.+?)deg\)/)||[])[1]||0);
-      items.push({el:el,x:r.left-zr.left,y:r.top-zr.top,vx:0,vy:0,rot:rot,vr:0,w:r.width,h:r.height,drag:false,dx:0,dy:0,lx:0,ly:0});
-      el.style.left='0';el.style.top='0';el.style.right='auto';el.style.bottom='auto';
-    });
-
-    function pl(s){s.el.style.transform='translate('+s.x+'px,'+s.y+'px) rotate('+s.rot+'deg)'}
-    items.forEach(pl);
-
-    items.forEach(function(s){
-      s.el.onpointerdown=function(e){e.preventDefault();s.drag=true;s.el.classList.add('dragging');s.el.setPointerCapture(e.pointerId);var zr=zone.getBoundingClientRect();s.dx=e.clientX-zr.left-s.x;s.dy=e.clientY-zr.top-s.y;s.lx=e.clientX;s.ly=e.clientY;s.vx=s.vy=0;zone.appendChild(s.el)};
-      s.el.onpointermove=function(e){if(!s.drag)return;var zr=zone.getBoundingClientRect();s.x=e.clientX-zr.left-s.dx;s.y=e.clientY-zr.top-s.dy;s.vx=(e.clientX-s.lx)*TH;s.vy=(e.clientY-s.ly)*TH;s.lx=e.clientX;s.ly=e.clientY};
-      function up(e){if(!s.drag)return;s.drag=false;s.el.classList.remove('dragging');s.el.releasePointerCapture(e.pointerId);s.vr=s.vx*0.2}
-      s.el.onpointerup=up;s.el.onpointercancel=up;
-    });
-
-    !function tick(){
-      var zw=zone.clientWidth,zh=zone.clientHeight;
-      for(var i=0;i<items.length;i++){var s=items[i];
-        if(s.drag){pl(s);continue}
-        if(Math.abs(s.vx)<.04&&Math.abs(s.vy)<.04&&Math.abs(s.vr)<.01)continue;
-        s.x+=s.vx;s.y+=s.vy;s.rot+=s.vr;
-        if(s.x<0){s.x=0;s.vx*=-BN;s.vr*=-.5}else if(s.x>zw-s.w){s.x=zw-s.w;s.vx*=-BN;s.vr*=-.5}
-        if(s.y<0){s.y=0;s.vy*=-BN}else if(s.y>zh-s.h){s.y=zh-s.h;s.vy*=-BN}
-        s.vx*=FR;s.vy*=FR;s.vr*=FR;pl(s)}
-      requestAnimationFrame(tick)}();
-  }();
 </script>
 </body>
 </html>

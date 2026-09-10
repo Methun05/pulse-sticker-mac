@@ -1,13 +1,6 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/react";
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
@@ -45,8 +38,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable} scroll-smooth`}>
-      <body className="bg-white text-[#1d1d1f] font-[var(--font-inter),system-ui,-apple-system,sans-serif] antialiased min-h-screen">
+    <html lang="en" className="scroll-smooth">
+      <head>
+        <script defer async src="https://integrate.depay.com/widgets/v13.js"></script>
+      </head>
+      <body className="bg-white text-[#1d1d1f] antialiased min-h-screen" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif' }}>
         {children}
         <Analytics />
       </body>
