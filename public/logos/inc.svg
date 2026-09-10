@@ -1,4 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
-  <circle cx="100" cy="100" r="96" fill="#00FF99"/>
-  <text x="100" y="112" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="64" font-weight="700" fill="#111827">INC</text>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><circle cx="100" cy="100" r="96" fill="#0F9"/><text x="100" y="112" fill="#111827" font-family="system-ui, -apple-system, sans-serif" font-size="64" font-weight="700" text-anchor="middle">INC</text></svg>
