@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
       data: {
         currentBid: bid.amount,
         currentBrandName: bid.brandName,
-        currentLogoUrl: null, // shown only after admin approval
+        currentLogoUrl: bid.logoUrl,
         currentWebsite: bid.website,
         currentEmail: bid.email,
         currentXHandle: bid.xHandle,

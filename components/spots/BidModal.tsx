@@ -127,7 +127,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
 
       {/* Modal */}
-      <div className="relative bg-white rounded-[36px] shadow-dialog border border-[var(--hairline)] w-full sm:max-w-lg max-h-[95dvh] overflow-hidden animate-modal-in px-4 py-4 flex flex-col">
+      <div className="relative bg-white rounded-[36px] shadow-dialog border border-[var(--hairline)] w-full sm:max-w-lg max-h-[85dvh] overflow-hidden animate-modal-in px-6 py-5 flex flex-col">
         {/* Header */}
         <div className="relative flex items-center justify-center px-1 pb-2">
           {step === 'form' && <h3 className="text-[20px] font-bold text-[var(--ink)]">Place your bid</h3>}
@@ -141,7 +141,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
         </div>
 
         {/* Scrollable body */}
-        <div className="flex-1 overflow-y-auto thin-scrollbar py-3 px-1">
+        <div className="overflow-y-auto thin-scrollbar py-3 px-2">
           {/* Step 1: Form */}
           {step === 'form' && (
             <form onSubmit={e => e.preventDefault()}>
@@ -245,7 +245,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
             <div className="space-y-4">
               <div className="text-center">
                 <h4 className="text-[20px] font-bold text-[var(--ink)]">Payment confirmed</h4>
-                <p className="text-[14px] text-[var(--ink-2)] mt-2">Upload your logo for admin approval before it appears on the board.</p>
+                <p className="text-[14px] text-[var(--ink-2)] mt-2">Upload your logo to display it on the board.</p>
               </div>
               <LogoUpload
                 bidId={bidId}
@@ -264,7 +264,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
               </div>
               <h4 className="text-[20px] font-bold text-[var(--ink)]">Logo submitted</h4>
               <p className="text-[14px] text-[var(--ink-2)] mt-2">
-                Spot #{spot.number} is yours. Your logo will appear after admin approval.
+                Spot #{spot.number} is yours. Your logo is now live on the board.
               </p>
               <button
                 onClick={onClose}

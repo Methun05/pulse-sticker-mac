@@ -71,17 +71,26 @@ export async function POST(request: NextRequest) {
     const base64 = Buffer.from(bytes).toString('base64');
     const dataUrl = `data:${mimeMap[extension]};base64,${base64}`;
 
-    await db.bid.update({
+    const updatedBid = await db.bid.update({
       where: { id: bid.id },
       data: {
         logoUrl: dataUrl,
-        logoStatus: 'PENDING_REVIEW',
+        logoStatus: 'APPROVED',
         logoUploadedAt: new Date(),
-        logoReviewedAt: null,
+        logoReviewedAt: new Date(),
       },
+      select: { id: true, status: true, spotId: true },
     });
 
-    return NextResponse.json({ success: true, status: 'PENDING_REVIEW' });
+    // If bid is confirmed, update the spot's logo immediately
+    if (updatedBid.status === 'CONFIRMED') {
+      await db.spot.update({
+        where: { id: updatedBid.spotId },
+        data: { currentLogoUrl: dataUrl },
+      });
+    }
+
+    return NextResponse.json({ success: true, status: 'APPROVED' });
   } catch (error: unknown) {
     console.error('Upload error:', error);
     return NextResponse.json(
