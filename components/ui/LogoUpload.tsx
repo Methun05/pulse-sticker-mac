@@ -1,23 +1,25 @@
 'use client';
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 
 // Post-payment usage (Step 3: logo step)
 interface LogoUploadSubmitProps {
   bidId: string;
   uploadToken: string;
   onSubmitted: () => void;
+  initialFile?: File;
   value?: never;
   onChange?: never;
 }
 
 // Pre-payment usage (Step 1: form step)
 interface LogoUploadValueProps {
-  value: string | null;
-  onChange: (url: string | null) => void;
+  value: File | null;
+  onChange: (file: File | null) => void;
   bidId?: never;
   uploadToken?: never;
   onSubmitted?: never;
+  initialFile?: never;
 }
 
 type LogoUploadProps = LogoUploadSubmitProps | LogoUploadValueProps;
@@ -30,6 +32,26 @@ export function LogoUpload(props: LogoUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const isValueMode = 'value' in props && props.onChange !== undefined;
+
+  // Generate preview from File in value mode
+  useEffect(() => {
+    if (isValueMode && props.value) {
+      const url = URL.createObjectURL(props.value);
+      setPreview(url);
+      return () => URL.revokeObjectURL(url);
+    }
+    if (isValueMode && !props.value) {
+      setPreview(null);
+    }
+  }, [isValueMode, props.value]);
+
+  // Auto-upload initialFile in submit mode
+  useEffect(() => {
+    if (!isValueMode && 'initialFile' in props && props.initialFile) {
+      upload(props.initialFile);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const upload = useCallback(async (file: File) => {
     setError('');
@@ -47,10 +69,7 @@ export function LogoUpload(props: LogoUploadProps) {
         setError(data.error || 'Upload failed');
         return;
       }
-      if (isValueMode) {
-        setPreview(URL.createObjectURL(file));
-        props.onChange(data.url);
-      } else {
+      if (!isValueMode) {
         props.onSubmitted();
       }
     } catch {
@@ -71,8 +90,12 @@ export function LogoUpload(props: LogoUploadProps) {
       setError('Max 500KB');
       return;
     }
-    upload(file);
-  }, [upload]);
+    if (isValueMode) {
+      props.onChange(file);
+    } else {
+      upload(file);
+    }
+  }, [isValueMode, props, upload]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -80,7 +103,7 @@ export function LogoUpload(props: LogoUploadProps) {
     handleFile(e.dataTransfer.files[0]);
   }, [handleFile]);
 
-  const displayPreview = isValueMode ? (preview || props.value) : null;
+  const displayPreview = isValueMode ? preview : null;
 
   return (
     <div>

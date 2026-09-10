@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { put } from '@vercel/blob';
-import { createHash, randomUUID } from 'crypto';
+import { createHash } from 'crypto';
 import { db, ensureDatabase } from '@/lib/db';
 import { rateLimit } from '@/lib/rate-limit';
 
@@ -68,14 +67,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'File content is not a supported image' }, { status: 400 });
     }
 
-    const blob = await put(`logos/${randomUUID()}.${extension}`, file, {
-      access: 'public',
-    });
+    const mimeMap: Record<string, string> = { png: 'image/png', jpg: 'image/jpeg', webp: 'image/webp' };
+    const base64 = Buffer.from(bytes).toString('base64');
+    const dataUrl = `data:${mimeMap[extension]};base64,${base64}`;
 
     await db.bid.update({
       where: { id: bid.id },
       data: {
-        logoUrl: blob.url,
+        logoUrl: dataUrl,
         logoStatus: 'PENDING_REVIEW',
         logoUploadedAt: new Date(),
         logoReviewedAt: null,

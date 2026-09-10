@@ -31,7 +31,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
   const [website, setWebsite] = useState('');
   const [xHandle, setXHandle] = useState('');
   const [email, setEmail] = useState('');
-  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
   const [bidAmount, setBidAmount] = useState(1);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -64,7 +64,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
       setStep('form');
       setError('');
       setPaymentData(null);
-      setLogoUrl(null);
+      setLogoFile(null);
       setXHandle('');
       setEmail('');
       setBidId(null);
@@ -96,7 +96,6 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
           website: website || undefined,
           xHandle: xHandle || undefined,
           email: email || undefined,
-          logoUrl: logoUrl || undefined,
         }),
       });
       const data = await res.json();
@@ -251,7 +250,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
                   onChange={e => setXHandle(e.target.value)}
                 />
 
-                <LogoUpload value={logoUrl} onChange={setLogoUrl} />
+                <LogoUpload value={logoFile} onChange={setLogoFile} />
               </div>
 
               {error && (
@@ -261,7 +260,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
               <div className="flex gap-3 mt-5">
                 <button
                   type="button"
-                  disabled={loading}
+                  disabled={loading || !brandName || !logoFile}
                   onClick={() => handleSubmit('crypto')}
                   className="flex-1 rounded-full bg-[var(--accent)] hover:bg-[var(--accent-hover)] disabled:opacity-50 text-white py-3 text-[15px] font-medium transition-colors"
                 >
@@ -269,7 +268,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
                 </button>
                 <button
                   type="button"
-                  disabled={loading}
+                  disabled={loading || !brandName || !logoFile}
                   onClick={() => handleSubmit('card')}
                   className="flex-1 rounded-full border border-[var(--hairline)] hover:border-[var(--ink-3)] disabled:opacity-50 text-[var(--ink)] py-3 text-[15px] font-medium transition-colors"
                 >
@@ -438,6 +437,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
                 bidId={paymentData.bidId}
                 uploadToken={paymentData.uploadToken}
                 onSubmitted={() => setStep('done')}
+                initialFile={logoFile || undefined}
               />
             </div>
           )}

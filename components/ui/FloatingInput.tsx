@@ -7,9 +7,9 @@ interface FloatingInputProps extends React.InputHTMLAttributes<HTMLInputElement>
   label: string;
 }
 
-export function FloatingInput({ label, className, ...props }: FloatingInputProps) {
+export function FloatingInput({ label, className, onFocus, onBlur, onChange, ...props }: FloatingInputProps) {
   const [focused, setFocused] = useState(false);
-  const [hasValue, setHasValue] = useState(false);
+  const hasValue = typeof props.value === 'string' ? props.value !== '' : false;
 
   return (
     <div className="relative">
@@ -20,12 +20,9 @@ export function FloatingInput({ label, className, ...props }: FloatingInputProps
           className
         )}
         placeholder=" "
-        onFocus={() => setFocused(true)}
-        onBlur={(e) => {
-          setFocused(false);
-          setHasValue(e.target.value !== "");
-        }}
-        onChange={(e) => setHasValue(e.target.value !== "")}
+        onFocus={(e) => { setFocused(true); onFocus?.(e); }}
+        onBlur={(e) => { setFocused(false); onBlur?.(e); }}
+        onChange={onChange}
         {...props}
       />
       <label
