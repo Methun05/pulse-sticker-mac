@@ -1,33 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyDepayRequest } from '@/lib/depay';
+import { verifyDepayRequest, signResponse } from '@/lib/depay';
 
 export const dynamic = 'force-dynamic';
 
 /**
  * DePay calls this endpoint to get payment configuration (amount, token, receiver).
- * We return what tokens/chains to accept and the amount based on the payload.
  */
 export async function POST(request: NextRequest) {
   const body = await request.text();
   const signature = request.headers.get('x-signature');
 
   const verified = verifyDepayRequest(body, signature);
-  console.log('[DePay config] Signature verified:', verified, 'Signature present:', !!signature);
-  console.log('[DePay config] Body:', body);
+  console.log('[DePay config] Signature verified:', verified, 'Body:', body);
 
   const payload = JSON.parse(body);
 
-  // TODO: Look up bid from payload and return dynamic amount + receiver
-  // For now, return a test configuration
-  console.log('[DePay config] Received:', payload);
-
-  // Example: accept USDC on multiple chains
-  // Replace RECEIVER_ADDRESS with your actual wallet
   const RECEIVER = process.env.DEPAY_RECEIVER_ADDRESS || '0x0000000000000000000000000000000000000000';
+  const amount = payload?.amount || 1;
 
-  const amount = payload?.amount || 1; // USD amount from frontend payload
-
-  return NextResponse.json({
+  const configuration = {
     accept: [
       {
         blockchain: 'ethereum',
@@ -54,5 +45,10 @@ export async function POST(request: NextRequest) {
         receiver: RECEIVER,
       },
     ],
-  });
+  };
+
+  const responseBody = JSON.stringify(configuration);
+  const response = NextResponse.json(configuration);
+  response.headers.set('x-signature', signResponse(responseBody));
+  return response;
 }

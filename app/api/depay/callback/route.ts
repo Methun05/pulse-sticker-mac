@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyDepayRequest } from '@/lib/depay';
+import { verifyDepayRequest, signResponse } from '@/lib/depay';
 
 export const dynamic = 'force-dynamic';
 
 /**
  * DePay calls this on successful payment confirmation.
- * Payload: { blockchain, transaction, sender, receiver, token, amount, payload }
  */
 export async function POST(request: NextRequest) {
   const body = await request.text();
@@ -27,7 +26,10 @@ export async function POST(request: NextRequest) {
   });
 
   // TODO: Update Bid/Spot/Board in DB based on data.payload.bidId
-  // For now, just acknowledge
 
-  return NextResponse.json({});
+  const responseData = {};
+  const responseBody = JSON.stringify(responseData);
+  const response = NextResponse.json(responseData);
+  response.headers.set('x-signature', signResponse(responseBody));
+  return response;
 }

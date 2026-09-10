@@ -18,7 +18,6 @@ export function verifyDepayRequest(body: string, signature: string | null): bool
   if (!signature) return false;
 
   try {
-    // DePay sends base64url-encoded signatures
     const sigBuffer = Buffer.from(signature, 'base64');
 
     return crypto.verify(
@@ -34,4 +33,24 @@ export function verifyDepayRequest(body: string, signature: string | null): bool
   } catch {
     return false;
   }
+}
+
+/**
+ * Sign our response so DePay can verify it came from us.
+ * Uses RSA-PSS SHA256 with salt length 64, base64url encoding.
+ */
+export function signResponse(data: string): string {
+  const privateKeyPem = process.env.DEPAY_PRIVATE_KEY?.replace(/\\n/g, '\n');
+  if (!privateKeyPem) throw new Error('DEPAY_PRIVATE_KEY not set');
+
+  const privateKey = crypto.createPrivateKey(privateKeyPem);
+
+  const signature = crypto.sign('sha256', Buffer.from(data), {
+    key: privateKey,
+    padding: crypto.constants.RSA_PKCS1_PSS_PADDING,
+    saltLength: 64,
+  });
+
+  // Base64url encoding (DePay convention)
+  return signature.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }

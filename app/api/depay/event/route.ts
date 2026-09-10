@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyDepayRequest } from '@/lib/depay';
+import { verifyDepayRequest, signResponse } from '@/lib/depay';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,15 +11,11 @@ export async function POST(request: NextRequest) {
   const signature = request.headers.get('x-signature');
 
   const verified = verifyDepayRequest(body, signature);
-  console.log('[DePay event] Signature verified:', verified, 'Body:', body);
+  console.log('[DePay event]', 'Verified:', verified, 'Body:', body);
 
-  const data = JSON.parse(body);
-
-  console.log('[DePay event]', data.status, {
-    blockchain: data.blockchain,
-    transaction: data.transaction,
-    sender: data.sender,
-  });
-
-  return NextResponse.json({});
+  const responseData = {};
+  const responseBody = JSON.stringify(responseData);
+  const response = NextResponse.json(responseData);
+  response.headers.set('x-signature', signResponse(responseBody));
+  return response;
 }
