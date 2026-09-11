@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import confetti from 'canvas-confetti';
 import { SpotData } from '@/components/laptop/MacBookMockup';
 import { LogoUpload } from '@/components/ui/LogoUpload';
 import { FloatingInput } from '@/components/ui/FloatingInput';
@@ -15,7 +16,7 @@ declare global {
   }
 }
 
-type Step = 'form' | 'confirming' | 'failed' | 'logo' | 'done';
+type Step = 'form' | 'securing' | 'failed' | 'done';
 type FailReason = 'timeout' | 'expired' | 'outbid' | 'rejected';
 
 interface BidModalProps {
@@ -36,16 +37,14 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Bid state (set after form submit)
+  // Bid state
   const [bidId, setBidId] = useState<string | null>(null);
   const [uploadToken, setUploadToken] = useState<string | null>(null);
   const [failReason, setFailReason] = useState<FailReason>('timeout');
   const [confirmedSpot, setConfirmedSpot] = useState<number | null>(null);
-  const [expiresIn, setExpiresIn] = useState<number | null>(null);
   const dodoInitialized = useRef(false);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Stop polling helper
   const stopPolling = () => {
     if (pollingRef.current) {
       clearInterval(pollingRef.current);
@@ -53,7 +52,60 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
     }
   };
 
-  // Start polling bid status
+  const fireConfetti = () => {
+    const end = Date.now() + 3 * 1000;
+    const colors = ["#a786ff", "#fd8bbc", "#eca184", "#f8deb1"];
+
+    const frame = () => {
+      if (Date.now() > end) return;
+
+      confetti({
+        particleCount: 2,
+        angle: 60,
+        spread: 55,
+        startVelocity: 60,
+        origin: { x: 0, y: 0.5 },
+        colors,
+      });
+      confetti({
+        particleCount: 2,
+        angle: 120,
+        spread: 55,
+        startVelocity: 60,
+        origin: { x: 1, y: 0.5 },
+        colors,
+      });
+
+      requestAnimationFrame(frame);
+    };
+
+    frame();
+  };
+
+  // Upload logo + transition to done
+  const finalize = async (finalBidId: string, finalUploadToken: string, spotNumber: number) => {
+    setConfirmedSpot(spotNumber);
+    onConfirmed();
+    setStep('securing');
+
+    // Upload logo in background
+    if (logoFile) {
+      try {
+        const formData = new FormData();
+        formData.append('file', logoFile);
+        formData.append('bidId', finalBidId);
+        formData.append('uploadToken', finalUploadToken);
+        await fetch('/api/upload', { method: 'POST', body: formData });
+      } catch {
+        // Logo upload failed — not critical, admin can handle
+      }
+    }
+
+    setStep('done');
+    fireConfetti();
+  };
+
+  // Poll bid status after payment provider closes
   const startPolling = (pollBidId: string, pollUploadToken: string) => {
     stopPolling();
     let pollCount = 0;
@@ -73,11 +125,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
 
         if (data.status === 'CONFIRMED') {
           stopPolling();
-          setBidId(pollBidId);
-          setUploadToken(pollUploadToken);
-          setConfirmedSpot(data.spotNumber);
-          onConfirmed();
-          setStep('logo');
+          await finalize(pollBidId, pollUploadToken, data.spotNumber);
         } else if (data.status === 'EXPIRED') {
           stopPolling();
           setFailReason('expired');
@@ -91,38 +139,15 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
           setFailReason('rejected');
           setStep('failed');
         }
-        // AWAITING_PAYMENT — keep polling
       } catch {
-        // Network error — keep polling, don't fail on transient errors
+        // Network error — keep polling
       }
     }, 3000);
   };
 
-  // Clean up polling on unmount
   useEffect(() => {
     return () => stopPolling();
   }, []);
-
-  // Poll for expiresIn countdown on form step
-  useEffect(() => {
-    if (step !== 'form' || !bidId) {
-      setExpiresIn(null);
-      return;
-    }
-    let active = true;
-    const check = async () => {
-      try {
-        const res = await fetch(`/api/bid/status?bidId=${bidId}`);
-        const data = await res.json();
-        if (active && data.expiresIn !== undefined) {
-          setExpiresIn(data.expiresIn);
-        }
-      } catch { /* ignore */ }
-    };
-    check();
-    const id = setInterval(check, 10000);
-    return () => { active = false; clearInterval(id); };
-  }, [step, bidId]);
 
   // Reset on open
   useEffect(() => {
@@ -139,7 +164,6 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
       setUploadToken(null);
       setFailReason('timeout');
       setConfirmedSpot(null);
-      setExpiresIn(null);
       const min = spot.currentBid > 0 ? spot.currentBid + 5 : spot.startingPrice;
       setBidAmount(min);
     }
@@ -147,7 +171,6 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
 
   const minBid = spot ? (spot.currentBid > 0 ? spot.currentBid + 5 : spot.startingPrice) : 1;
 
-  // Form submit → create bid → launch DePay widget
   const handleSubmit = async (target: 'crypto' | 'card') => {
     if (!spot) return;
     setError('');
@@ -182,19 +205,17 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
             displayType: 'overlay',
             onEvent: async (event) => {
               if (event.event_type === 'checkout.closed') {
-                // Quick check if payment already confirmed by webhook
+                // Quick check if webhook already confirmed
                 try {
                   const statusRes = await fetch(`/api/bid/status?bidId=${data.bidId}`);
                   const statusData = await statusRes.json();
                   if (statusData.status === 'CONFIRMED') {
-                    setBidId(data.bidId);
-                    setUploadToken(data.uploadToken);
-                    onConfirmed();
-                    setStep('logo');
+                    await finalize(data.bidId, data.uploadToken, statusData.spotNumber);
                     return;
                   }
                 } catch { /* ignore */ }
-                // Not confirmed — go back to form so user can retry or switch to crypto
+                // Not confirmed yet — start background polling, stay on form
+                startPolling(data.bidId, data.uploadToken);
               }
             },
           });
@@ -213,7 +234,6 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
             setError(checkoutData.error || 'Failed to create checkout session');
             return;
           }
-          // Open DoDo overlay
           DodoCheckout.Checkout.open({ checkoutUrl: checkoutData.checkout_url });
         } catch {
           setError('Failed to start fiat checkout. Please try again.');
@@ -237,11 +257,11 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
         integration,
         payload: { bidId: data.bidId },
         validated: () => {
-          setStep('confirming');
+          // DePay confirmed — start polling for webhook confirmation
           startPolling(data.bidId, data.uploadToken);
         },
         closed: () => {
-          // User closed widget without completing — stay on form so they can retry
+          // User closed without completing — stay on form
         },
       });
     } catch {
@@ -261,12 +281,14 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
       {/* Modal */}
       <div className="relative bg-white rounded-[36px] shadow-dialog border border-[var(--hairline)] w-full sm:max-w-lg max-h-[85dvh] overflow-hidden animate-modal-in px-6 py-5 flex flex-col">
         {/* Header */}
-        <div className="relative flex items-center justify-center px-1 pb-2">
-          {step === 'form' && <h3 className="text-[20px] font-bold text-[var(--ink)]">Place your bid</h3>}
+        <div className="flex items-center justify-between px-1 pb-2 min-h-[36px]">
+          <div className="flex-1">
+            {step === 'form' && <h3 className="text-[20px] font-bold text-[var(--ink)]">Place your bid</h3>}
+          </div>
           <button
             type="button"
             onClick={onClose}
-            className="absolute right-1 z-10 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--surface)] text-[var(--ink)] hover:bg-[var(--hairline)] transition-colors"
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--surface)] text-[var(--ink)] hover:bg-[var(--hairline)] transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M11.9997 10.5865L16.9495 5.63672L18.3637 7.05093L13.4139 12.0007L18.3637 16.9504L16.9495 18.3646L11.9997 13.4149L7.04996 18.3646L5.63574 16.9504L10.5855 12.0007L5.63574 7.05093L7.04996 5.63672L11.9997 10.5865Z"></path></svg>
           </button>
@@ -274,7 +296,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
 
         {/* Scrollable body */}
         <div className="overflow-y-auto thin-scrollbar py-3 px-2">
-          {/* Step 1: Form */}
+          {/* Form */}
           {step === 'form' && (
             <form onSubmit={e => e.preventDefault()}>
               <div className="text-center mb-6">
@@ -325,12 +347,6 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
                 <p className="text-[13px] text-[var(--red)] bg-red-50 rounded-lg px-3 py-2 mt-4">{error}</p>
               )}
 
-              {bidId && expiresIn !== null && expiresIn > 0 && (
-                <p className="text-[13px] text-[var(--ink-3)] text-center mt-3">
-                  Pending bid expires in {Math.ceil(expiresIn / 60000)}m
-                </p>
-              )}
-
               <div className="flex gap-3 mt-5">
                 <button
                   type="button"
@@ -356,28 +372,21 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
             </form>
           )}
 
-          {/* Confirming — polling for payment verification */}
-          {step === 'confirming' && (
-            <div className="text-center py-8">
-              <div className="w-14 h-14 rounded-full bg-[var(--surface)] flex items-center justify-center mx-auto mb-4 animate-pulse">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10" />
-                  <polyline points="12,6 12,12 16,14" />
+          {/* Securing — logo uploading after payment confirmed */}
+          {step === 'securing' && (
+            <div className="text-center py-12">
+              <div className="w-14 h-14 rounded-full bg-[var(--surface)] flex items-center justify-center mx-auto mb-4">
+                <svg className="animate-spin" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="10" stroke="var(--hairline)" strokeWidth="2.5" />
+                  <path d="M12 2a10 10 0 0 1 10 10" stroke="var(--ink)" strokeWidth="2.5" strokeLinecap="round" />
                 </svg>
               </div>
-              <h3 className="text-[20px] font-bold text-[var(--ink)]">Verifying payment</h3>
-              <p className="text-[14px] text-[var(--ink-3)] mt-2">Waiting for payment confirmation. This usually takes a few seconds.</p>
-              <button
-                type="button"
-                onClick={() => { stopPolling(); setStep('form'); }}
-                className="mt-6 rounded-full border border-[var(--hairline)] px-6 py-2.5 text-[14px] font-medium hover:border-[var(--ink-3)] transition-colors"
-              >
-                Back
-              </button>
+              <h3 className="text-[20px] font-bold text-[var(--ink)]">Securing your spot</h3>
+              <p className="text-[14px] text-[var(--ink-3)] mt-2">Uploading your logo...</p>
             </div>
           )}
 
-          {/* Failed — timeout, expired, or outbid */}
+          {/* Failed */}
           {step === 'failed' && (
             <div className="text-center py-8">
               <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
@@ -420,30 +429,8 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
                 }}
                 className="mt-6 rounded-full bg-[var(--accent)] text-white px-6 py-2.5 text-[14px] font-medium hover:bg-[var(--accent-hover)] transition-colors"
               >
-                Try Again
+                {failReason === 'outbid' || failReason === 'rejected' ? 'Close' : 'Try Again'}
               </button>
-            </div>
-          )}
-
-          {/* Logo upload after payment */}
-          {step === 'logo' && bidId && uploadToken && (
-            <div className="space-y-4">
-              <div className="text-center">
-                <h4 className="text-[20px] font-bold text-[var(--ink)]">Payment confirmed</h4>
-                {confirmedSpot && confirmedSpot !== spot.number ? (
-                  <p className="text-[14px] text-[var(--ink-2)] mt-2">
-                    Spot #{spot.number} was taken, so you've been assigned <strong>Spot #{confirmedSpot}</strong>. Upload your logo below.
-                  </p>
-                ) : (
-                  <p className="text-[14px] text-[var(--ink-2)] mt-2">Upload your logo to complete your spot.</p>
-                )}
-              </div>
-              <LogoUpload
-                bidId={bidId}
-                uploadToken={uploadToken}
-                onSubmitted={() => setStep('done')}
-                initialFile={logoFile || undefined}
-              />
             </div>
           )}
 
@@ -453,10 +440,16 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
               <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--green)" strokeWidth="2.5"><polyline points="20,6 9,17 4,12"/></svg>
               </div>
-              <h4 className="text-[20px] font-bold text-[var(--ink)]">Logo submitted</h4>
-              <p className="text-[14px] text-[var(--ink-2)] mt-2">
-                Spot #{confirmedSpot || spot.number} is yours. Your logo is now live on the board.
-              </p>
+              <h4 className="text-[20px] font-bold text-[var(--ink)]">You're in</h4>
+              {confirmedSpot && confirmedSpot !== spot.number ? (
+                <p className="text-[14px] text-[var(--ink-2)] mt-2">
+                  Spot #{spot.number} was taken, so you've been assigned <strong>Spot #{confirmedSpot}</strong>. Your logo is now live on the board.
+                </p>
+              ) : (
+                <p className="text-[14px] text-[var(--ink-2)] mt-2">
+                  Spot #{confirmedSpot || spot.number} is yours. Your logo is now live on the board.
+                </p>
+              )}
               <button
                 onClick={onClose}
                 className="mt-6 rounded-full bg-[var(--accent)] text-white px-6 py-2.5 text-[14px] font-medium hover:bg-[var(--accent-hover)] transition-colors"

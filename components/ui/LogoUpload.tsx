@@ -119,11 +119,21 @@ export function LogoUpload(props: LogoUploadProps) {
         }`}
       >
         {uploading ? (
-          <p className="text-sm text-[var(--ink-3)]">Uploading...</p>
+          <div className="flex items-center justify-center gap-3 py-2">
+            <svg className="animate-spin" width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="var(--hairline)" strokeWidth="2.5" />
+              <path d="M12 2a10 10 0 0 1 10 10" stroke="var(--ink-3)" strokeWidth="2.5" strokeLinecap="round" />
+            </svg>
+            <p className="text-sm text-[var(--ink-3)]">Uploading...</p>
+          </div>
         ) : displayPreview ? (
-          <div className="flex items-center justify-center gap-3">
-            <img src={displayPreview} alt="Logo" className="w-10 h-10 rounded object-contain" />
-            <p className="text-sm text-[var(--ink-3)]">Click to replace</p>
+          <div className="flex items-center gap-3 py-1">
+            <img src={displayPreview} alt="Logo" className="w-12 h-12 rounded-lg object-contain bg-[var(--surface)]" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-[var(--ink)] truncate">Logo ready</p>
+              <p className="text-xs text-[var(--ink-3)]">Click to replace</p>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" strokeWidth="2.5"><polyline points="20,6 9,17 4,12"/></svg>
           </div>
         ) : (
           <>
