@@ -41,6 +41,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
   const [bidId, setBidId] = useState<string | null>(null);
   const [uploadToken, setUploadToken] = useState<string | null>(null);
   const [failReason, setFailReason] = useState<FailReason>('timeout');
+  const [refundMessage, setRefundMessage] = useState<string | null>(null);
   const [confirmedSpot, setConfirmedSpot] = useState<number | null>(null);
   const dodoInitialized = useRef(false);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -138,6 +139,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
         } else if (data.status === 'REJECTED') {
           stopPolling();
           setFailReason('rejected');
+          if (data.refundInfo?.message) setRefundMessage(data.refundInfo.message);
           setStep('failed');
         }
       } catch {
@@ -164,6 +166,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
       setBidId(null);
       setUploadToken(null);
       setFailReason('timeout');
+      setRefundMessage(null);
       setConfirmedSpot(null);
       const min = spot.currentBid > 0 ? spot.currentBid + 5 : spot.startingPrice;
       setBidAmount(min);
@@ -419,7 +422,9 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
               {failReason === 'rejected' && (
                 <>
                   <h3 className="text-[20px] font-bold text-[var(--ink)]">No spots available</h3>
-                  <p className="text-[14px] text-[var(--ink-3)] mt-2">Your payment was received but all spots are currently taken. A refund will be processed.</p>
+                  <p className="text-[14px] text-[var(--ink-3)] mt-2">
+                    {refundMessage || 'Your payment was received but all spots are currently taken. A refund will be processed.'}
+                  </p>
                 </>
               )}
               <button
