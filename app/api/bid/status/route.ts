@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
 
     const bid = await db.bid.findUnique({
       where: { id: bidId },
-      include: { spot: true },
+      include: { spot: true, payment: true },
     });
 
     if (!bid) {
@@ -35,11 +35,21 @@ export async function GET(request: NextRequest) {
     const ageMs = Date.now() - bid.createdAt.getTime();
 
     if (status === 'AWAITING_PAYMENT' && ageMs > EXPIRY_MS) {
-      await db.bid.update({
-        where: { id: bidId },
-        data: { status: 'EXPIRED' },
-      });
-      status = 'EXPIRED';
+      // Check if there's a REJECTED payment (paid but no spots available)
+      if (bid.payment?.status === 'REJECTED') {
+        status = 'REJECTED';
+      } else {
+        await db.bid.update({
+          where: { id: bidId },
+          data: { status: 'EXPIRED' },
+        });
+        status = 'EXPIRED';
+      }
+    }
+
+    // Detect REJECTED payment even before expiry
+    if (status === 'AWAITING_PAYMENT' && bid.payment?.status === 'REJECTED') {
+      status = 'REJECTED';
     }
 
     return NextResponse.json({

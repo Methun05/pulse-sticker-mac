@@ -16,7 +16,7 @@ declare global {
 }
 
 type Step = 'form' | 'confirming' | 'failed' | 'logo' | 'done';
-type FailReason = 'timeout' | 'expired' | 'outbid';
+type FailReason = 'timeout' | 'expired' | 'outbid' | 'rejected';
 
 interface BidModalProps {
   spot: SpotData | null;
@@ -40,6 +40,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
   const [bidId, setBidId] = useState<string | null>(null);
   const [uploadToken, setUploadToken] = useState<string | null>(null);
   const [failReason, setFailReason] = useState<FailReason>('timeout');
+  const [confirmedSpot, setConfirmedSpot] = useState<number | null>(null);
   const [expiresIn, setExpiresIn] = useState<number | null>(null);
   const dodoInitialized = useRef(false);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -74,6 +75,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
           stopPolling();
           setBidId(pollBidId);
           setUploadToken(pollUploadToken);
+          setConfirmedSpot(data.spotNumber);
           onConfirmed();
           setStep('logo');
         } else if (data.status === 'EXPIRED') {
@@ -83,6 +85,10 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
         } else if (data.status === 'OUTBID') {
           stopPolling();
           setFailReason('outbid');
+          setStep('failed');
+        } else if (data.status === 'REJECTED') {
+          stopPolling();
+          setFailReason('rejected');
           setStep('failed');
         }
         // AWAITING_PAYMENT — keep polling
@@ -132,6 +138,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
       setBidId(null);
       setUploadToken(null);
       setFailReason('timeout');
+      setConfirmedSpot(null);
       setExpiresIn(null);
       const min = spot.currentBid > 0 ? spot.currentBid + 5 : spot.startingPrice;
       setBidAmount(min);
@@ -394,10 +401,16 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
                   <p className="text-[14px] text-[var(--ink-3)] mt-2">This spot was taken by another bidder. Try a different spot.</p>
                 </>
               )}
+              {failReason === 'rejected' && (
+                <>
+                  <h3 className="text-[20px] font-bold text-[var(--ink)]">No spots available</h3>
+                  <p className="text-[14px] text-[var(--ink-3)] mt-2">Your payment was received but all spots are currently taken. A refund will be processed.</p>
+                </>
+              )}
               <button
                 type="button"
                 onClick={() => {
-                  if (failReason === 'outbid') {
+                  if (failReason === 'outbid' || failReason === 'rejected') {
                     onClose();
                   } else {
                     setBidId(null);
@@ -416,8 +429,14 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
           {step === 'logo' && bidId && uploadToken && (
             <div className="space-y-4">
               <div className="text-center">
-                <h4 className="text-[20px] font-bold text-[var(--ink)]">Payment processing</h4>
-                <p className="text-[14px] text-[var(--ink-2)] mt-2">Your payment is being confirmed on-chain. Upload your logo while you wait.</p>
+                <h4 className="text-[20px] font-bold text-[var(--ink)]">Payment confirmed</h4>
+                {confirmedSpot && confirmedSpot !== spot.number ? (
+                  <p className="text-[14px] text-[var(--ink-2)] mt-2">
+                    Spot #{spot.number} was taken, so you've been assigned <strong>Spot #{confirmedSpot}</strong>. Upload your logo below.
+                  </p>
+                ) : (
+                  <p className="text-[14px] text-[var(--ink-2)] mt-2">Upload your logo to complete your spot.</p>
+                )}
               </div>
               <LogoUpload
                 bidId={bidId}
@@ -436,7 +455,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
               </div>
               <h4 className="text-[20px] font-bold text-[var(--ink)]">Logo submitted</h4>
               <p className="text-[14px] text-[var(--ink-2)] mt-2">
-                Spot #{spot.number} is yours. Your logo is now live on the board.
+                Spot #{confirmedSpot || spot.number} is yours. Your logo is now live on the board.
               </p>
               <button
                 onClick={onClose}
