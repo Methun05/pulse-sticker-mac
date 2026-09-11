@@ -2,16 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createHash } from 'crypto';
 import { db, ensureDatabase } from '@/lib/db';
 import { rateLimit } from '@/lib/rate-limit';
+import { imageExtension, checkPolyglot } from '@/lib/image-validation';
 
 const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
 const MAX_SIZE = 500 * 1024; // 500KB
-
-function imageExtension(bytes: Uint8Array): string | null {
-  if (bytes.length >= 8 && bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) return 'png';
-  if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return 'jpg';
-  if (bytes.length >= 12 && bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 && bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50) return 'webp';
-  return null;
-}
 
 export async function POST(request: NextRequest) {
   const rl = await rateLimit(request, { maxRequests: 10, windowMs: 60_000, prefix: 'logo-upload' });
@@ -67,10 +61,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'File content is not a supported image' }, { status: 400 });
     }
 
-    // Reject polyglot files: scan for embedded HTML/script tags in binary content
-    const textSample = new TextDecoder('ascii', { fatal: false }).decode(bytes);
-    if (/<script|<svg|<html|<iframe|javascript:/i.test(textSample)) {
-      return NextResponse.json({ success: false, error: 'File contains disallowed content' }, { status: 400 });
+    const polyglotError = checkPolyglot(bytes);
+    if (polyglotError) {
+      return NextResponse.json({ success: false, error: polyglotError }, { status: 400 });
     }
 
     const mimeMap: Record<string, string> = { png: 'image/png', jpg: 'image/jpeg', webp: 'image/webp' };

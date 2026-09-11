@@ -32,7 +32,12 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
   const [website, setWebsite] = useState('');
   const [xHandle, setXHandle] = useState('');
   const [email, setEmail] = useState('');
-  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logo, setLogo] = useState<{ type: 'file'; file: File; preview: string } | { type: 'fetched'; dataUrl: string } | null>(null);
+  const [logoLoading, setLogoLoading] = useState(false);
+  const [showUpload, setShowUpload] = useState(false);
+  const [showUrlInput, setShowUrlInput] = useState(false);
+  const [logoUrl, setLogoUrl] = useState('');
+  const [logoError, setLogoError] = useState('');
   const [bidAmount, setBidAmount] = useState(1);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -91,10 +96,19 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
     setStep('securing');
 
     // Upload logo in background
-    if (logoFile) {
+    if (logo) {
       try {
+        let file: File;
+        if (logo.type === 'file') {
+          file = logo.file;
+        } else {
+          // Convert data URL to File
+          const res = await fetch(logo.dataUrl);
+          const blob = await res.blob();
+          file = new File([blob], 'logo.png', { type: blob.type });
+        }
         const formData = new FormData();
-        formData.append('file', logoFile);
+        formData.append('file', file);
         formData.append('bidId', finalBidId);
         formData.append('uploadToken', finalUploadToken);
         await fetch('/api/upload', { method: 'POST', body: formData });
@@ -158,7 +172,12 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
       stopPolling();
       setStep('form');
       setError('');
-      setLogoFile(null);
+      setLogo(null);
+      setLogoLoading(false);
+      setShowUpload(false);
+      setShowUrlInput(false);
+      setLogoUrl('');
+      setLogoError('');
       setBrandName('');
       setWebsite('');
       setXHandle('');
@@ -174,6 +193,69 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
   }, [isOpen, spot]);
 
   const minBid = spot ? (spot.currentBid > 0 ? spot.currentBid + 5 : spot.startingPrice) : 1;
+
+  const handleWebsiteBlur = async () => {
+    if (!website || logo?.type === 'file' || logoLoading) return;
+    setLogoLoading(true);
+    setLogoError('');
+    try {
+      const res = await fetch('/api/logo/fetch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ domain: website }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setLogo({ type: 'fetched', dataUrl: data.dataUrl });
+      }
+    } catch {
+      // Silent fail — user can still add logo manually
+    } finally {
+      setLogoLoading(false);
+    }
+  };
+
+  const handleLogoUrlFetch = async () => {
+    if (!logoUrl) return;
+    setLogoLoading(true);
+    setLogoError('');
+    try {
+      const res = await fetch('/api/logo/fetch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: logoUrl }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setLogo({ type: 'fetched', dataUrl: data.dataUrl });
+        setShowUrlInput(false);
+        setLogoUrl('');
+      } else {
+        setLogoError(data.error || 'Failed to fetch logo');
+      }
+    } catch {
+      setLogoError('Failed to fetch logo');
+    } finally {
+      setLogoLoading(false);
+    }
+  };
+
+  const handleLogoFile = (file: File | null) => {
+    if (file) {
+      const preview = URL.createObjectURL(file);
+      setLogo({ type: 'file', file, preview });
+      setShowUpload(false);
+    }
+  };
+
+  const resetLogo = () => {
+    if (logo?.type === 'file') URL.revokeObjectURL(logo.preview);
+    setLogo(null);
+    setShowUpload(false);
+    setShowUrlInput(false);
+    setLogoUrl('');
+    setLogoError('');
+  };
 
   const handleSubmit = async (target: 'crypto' | 'card') => {
     if (!spot) return;
@@ -348,6 +430,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
                       v = v.replace(/^https?:\/\//i, '');
                       setWebsite(v);
                     }}
+                    onBlur={handleWebsiteBlur}
                   />
                 </div>
 
@@ -365,7 +448,78 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
                   onChange={e => setXHandle(e.target.value)}
                 />
 
-                <LogoUpload value={logoFile} onChange={setLogoFile} />
+                {/* Logo section */}
+                <div>
+                  {logoLoading ? (
+                    <div className="flex items-center gap-3 rounded-xl border border-dashed border-[var(--hairline)] px-4 py-5">
+                      <svg className="animate-spin shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="10" stroke="var(--hairline)" strokeWidth="2.5" />
+                        <path d="M12 2a10 10 0 0 1 10 10" stroke="var(--ink-3)" strokeWidth="2.5" strokeLinecap="round" />
+                      </svg>
+                      <p className="text-sm text-[var(--ink-3)]">Fetching logo...</p>
+                    </div>
+                  ) : logo ? (
+                    <div className="flex items-center gap-3 rounded-xl border border-[var(--hairline)] px-4 py-3">
+                      <img
+                        src={logo.type === 'file' ? logo.preview : logo.dataUrl}
+                        alt="Logo"
+                        className="w-12 h-12 rounded-lg object-contain bg-[var(--surface)]"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-[var(--ink)]">Logo ready</p>
+                        <button type="button" onClick={resetLogo} className="text-xs text-[var(--ink-3)] underline">
+                          Replace
+                        </button>
+                      </div>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" strokeWidth="2.5"><polyline points="20,6 9,17 4,12"/></svg>
+                    </div>
+                  ) : (
+                    <div>
+                      {!showUpload && !showUrlInput && (
+                        <div className="rounded-xl border border-dashed border-[var(--hairline)] px-4 py-5 text-center">
+                          <p className="text-sm text-[var(--ink-3)] mb-2">Add a logo (optional)</p>
+                          <div className="flex items-center justify-center gap-3">
+                            <button type="button" onClick={() => setShowUpload(true)} className="text-xs font-medium text-[var(--ink-2)] underline">
+                              Upload
+                            </button>
+                            <span className="text-xs text-[var(--ink-3)]">or</span>
+                            <button type="button" onClick={() => setShowUrlInput(true)} className="text-xs font-medium text-[var(--ink-2)] underline">
+                              Paste URL
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                      {showUpload && (
+                        <LogoUpload value={null} onChange={handleLogoFile} />
+                      )}
+                      {showUrlInput && (
+                        <div className="space-y-2">
+                          <div className="flex gap-2">
+                            <input
+                              type="url"
+                              placeholder="https://example.com/logo.png"
+                              className="flex-1 px-3 py-3 border rounded-xl bg-transparent outline-none text-sm text-[var(--ink)] border-[var(--hairline)] focus:border-[var(--ink)] transition-colors"
+                              value={logoUrl}
+                              onChange={e => setLogoUrl(e.target.value)}
+                            />
+                            <button
+                              type="button"
+                              onClick={handleLogoUrlFetch}
+                              disabled={!logoUrl}
+                              className="px-4 py-3 rounded-xl bg-[var(--surface)] text-sm font-medium text-[var(--ink)] hover:bg-[var(--hairline)] disabled:opacity-50 transition-colors"
+                            >
+                              Fetch
+                            </button>
+                          </div>
+                          <button type="button" onClick={() => { setShowUrlInput(false); setLogoUrl(''); setLogoError(''); }} className="text-xs text-[var(--ink-3)] underline">
+                            Cancel
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {logoError && <p className="text-xs text-[var(--red)] mt-1.5 px-1">{logoError}</p>}
+                </div>
               </div>
 
               {error && (
@@ -375,7 +529,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
               <div className="flex gap-3 mt-5">
                 <button
                   type="button"
-                  disabled={loading || !brandName || !logoFile}
+                  disabled={loading || !brandName}
                   onClick={() => handleSubmit('crypto')}
                   className="flex-1 rounded-full bg-[var(--accent)] hover:bg-[var(--accent-hover)] disabled:opacity-50 text-white py-3 text-[15px] font-medium transition-colors"
                 >
@@ -383,7 +537,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
                 </button>
                 <button
                   type="button"
-                  disabled={loading || !brandName || !logoFile}
+                  disabled={loading || !brandName}
                   onClick={() => handleSubmit('card')}
                   className="flex-1 rounded-full border border-[var(--hairline)] hover:border-[var(--ink-3)] disabled:opacity-50 text-[var(--ink)] py-3 text-[15px] font-medium transition-colors"
                 >
