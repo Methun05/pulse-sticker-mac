@@ -255,5 +255,5 @@ export async function confirmBidTransaction(params: {
     }
 
     return result;
-  });
+  }, { timeout: 15000 });
 }
