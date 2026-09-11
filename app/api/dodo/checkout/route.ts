@@ -33,8 +33,9 @@ export async function POST(request: NextRequest) {
     const session = await createCheckoutSession(bidId, bid.amount, bid.email || undefined);
 
     return NextResponse.json({ checkout_url: session.checkout_url });
-  } catch (error) {
-    console.error('[DoDo checkout] Error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error('[DoDo checkout] Error:', msg, error);
+    return NextResponse.json({ error: `Checkout failed: ${msg}` }, { status: 500 });
   }
 }
