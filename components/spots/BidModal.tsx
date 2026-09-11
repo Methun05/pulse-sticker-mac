@@ -44,6 +44,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
   const [confirmedSpot, setConfirmedSpot] = useState<number | null>(null);
   const dodoInitialized = useRef(false);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const latestBidRef = useRef<{ bidId: string; uploadToken: string } | null>(null);
 
   const stopPolling = () => {
     if (pollingRef.current) {
@@ -198,6 +199,9 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
       setUploadToken(data.uploadToken);
 
       if (target === 'card') {
+        // Store current bid info in ref so DoDo event handler always reads latest
+        latestBidRef.current = { bidId: data.bidId, uploadToken: data.uploadToken };
+
         // Initialize DoDo overlay SDK once
         if (!dodoInitialized.current) {
           DodoCheckout.Initialize({
@@ -205,17 +209,19 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
             displayType: 'overlay',
             onEvent: async (event) => {
               if (event.event_type === 'checkout.closed') {
+                const current = latestBidRef.current;
+                if (!current) return;
                 // Quick check if webhook already confirmed
                 try {
-                  const statusRes = await fetch(`/api/bid/status?bidId=${data.bidId}`);
+                  const statusRes = await fetch(`/api/bid/status?bidId=${current.bidId}`);
                   const statusData = await statusRes.json();
                   if (statusData.status === 'CONFIRMED') {
-                    await finalize(data.bidId, data.uploadToken, statusData.spotNumber);
+                    await finalize(current.bidId, current.uploadToken, statusData.spotNumber);
                     return;
                   }
                 } catch { /* ignore */ }
                 // Not confirmed yet — start background polling, stay on form
-                startPolling(data.bidId, data.uploadToken);
+                startPolling(current.bidId, current.uploadToken);
               }
             },
           });

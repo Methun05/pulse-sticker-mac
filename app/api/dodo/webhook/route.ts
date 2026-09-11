@@ -57,7 +57,11 @@ export async function POST(request: NextRequest) {
 
   if ('error' in result) {
     console.error(`[DoDo webhook] ${result.error}: ${bidId}`);
-    return NextResponse.json({ received: true, error: result.error });
+    // Refund fiat payment when bid expired or otherwise invalid — user was already charged
+    if (dodoPaymentId) {
+      await refundPayment(dodoPaymentId, `Bid ${bidId}: ${result.error}`);
+    }
+    return NextResponse.json({ received: true, error: result.error, refunded: !!dodoPaymentId });
   }
 
   if ('amountMismatch' in result) {

@@ -11,6 +11,15 @@ export const MACBOOK_SPOTS = [
   { number: 8, position: 'Lower Right', size: 'Medium', startingPrice: 2 },
   { number: 9, position: 'Bottom Left', size: 'Small', startingPrice: 1 },
   { number: 10, position: 'Bottom Right', size: 'Small', startingPrice: 1 },
+  // Inside spots (palm rest, left 2×2 + right 2×2)
+  { number: 11, position: 'Inside Left Top-Left', size: 'Small', startingPrice: 1 },
+  { number: 12, position: 'Inside Left Top-Right', size: 'Small', startingPrice: 1 },
+  { number: 13, position: 'Inside Left Bottom-Left', size: 'Small', startingPrice: 1 },
+  { number: 14, position: 'Inside Left Bottom-Right', size: 'Small', startingPrice: 1 },
+  { number: 15, position: 'Inside Right Top-Left', size: 'Small', startingPrice: 1 },
+  { number: 16, position: 'Inside Right Top-Right', size: 'Small', startingPrice: 1 },
+  { number: 17, position: 'Inside Right Bottom-Left', size: 'Small', startingPrice: 1 },
+  { number: 18, position: 'Inside Right Bottom-Right', size: 'Small', startingPrice: 1 },
 ];
 
 const globalForPrisma = globalThis as unknown as {
