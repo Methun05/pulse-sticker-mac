@@ -3,7 +3,7 @@ import { Webhook } from 'standardwebhooks';
 
 const dodo = new DodoPayments({
   bearerToken: process.env.DODO_PAYMENTS_API_KEY,
-  environment: 'test_mode',
+  environment: 'live_mode',
 });
 
 export async function createCheckoutSession(bidId: string, dollarAmount: number, email?: string) {
