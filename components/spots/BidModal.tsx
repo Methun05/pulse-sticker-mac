@@ -313,7 +313,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
                   <Stepper
                     value={bidAmount}
                     min={minBid}
-                    max={400}
+                    max={10000}
                     onChange={setBidAmount}
                   />
                 </div>

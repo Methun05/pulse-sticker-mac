@@ -75,12 +75,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (parsedAmount > 400) {
-      return NextResponse.json(
-        { success: false, error: 'Maximum bid amount is $400' },
-        { status: 400 }
-      );
-    }
 
     const num = typeof spotNumber === 'number' ? spotNumber : Number(spotNumber);
     if (!Number.isInteger(num) || num < 1 || num > 18) {
