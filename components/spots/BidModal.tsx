@@ -15,7 +15,8 @@ declare global {
   }
 }
 
-type Step = 'form' | 'card' | 'logo' | 'done';
+type Step = 'form' | 'confirming' | 'failed' | 'logo' | 'done';
+type FailReason = 'timeout' | 'expired' | 'outbid';
 
 interface BidModalProps {
   spot: SpotData | null;
@@ -38,11 +39,89 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
   // Bid state (set after form submit)
   const [bidId, setBidId] = useState<string | null>(null);
   const [uploadToken, setUploadToken] = useState<string | null>(null);
+  const [failReason, setFailReason] = useState<FailReason>('timeout');
+  const [expiresIn, setExpiresIn] = useState<number | null>(null);
   const dodoInitialized = useRef(false);
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Stop polling helper
+  const stopPolling = () => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
+  };
+
+  // Start polling bid status
+  const startPolling = (pollBidId: string, pollUploadToken: string) => {
+    stopPolling();
+    let pollCount = 0;
+    const maxPolls = 100; // 5 min at 3s intervals
+
+    pollingRef.current = setInterval(async () => {
+      pollCount++;
+      if (pollCount > maxPolls) {
+        stopPolling();
+        setFailReason('timeout');
+        setStep('failed');
+        return;
+      }
+      try {
+        const res = await fetch(`/api/bid/status?bidId=${pollBidId}`);
+        const data = await res.json();
+
+        if (data.status === 'CONFIRMED') {
+          stopPolling();
+          setBidId(pollBidId);
+          setUploadToken(pollUploadToken);
+          onConfirmed();
+          setStep('logo');
+        } else if (data.status === 'EXPIRED') {
+          stopPolling();
+          setFailReason('expired');
+          setStep('failed');
+        } else if (data.status === 'OUTBID') {
+          stopPolling();
+          setFailReason('outbid');
+          setStep('failed');
+        }
+        // AWAITING_PAYMENT — keep polling
+      } catch {
+        // Network error — keep polling, don't fail on transient errors
+      }
+    }, 3000);
+  };
+
+  // Clean up polling on unmount
+  useEffect(() => {
+    return () => stopPolling();
+  }, []);
+
+  // Poll for expiresIn countdown on form step
+  useEffect(() => {
+    if (step !== 'form' || !bidId) {
+      setExpiresIn(null);
+      return;
+    }
+    let active = true;
+    const check = async () => {
+      try {
+        const res = await fetch(`/api/bid/status?bidId=${bidId}`);
+        const data = await res.json();
+        if (active && data.expiresIn !== undefined) {
+          setExpiresIn(data.expiresIn);
+        }
+      } catch { /* ignore */ }
+    };
+    check();
+    const id = setInterval(check, 10000);
+    return () => { active = false; clearInterval(id); };
+  }, [step, bidId]);
 
   // Reset on open
   useEffect(() => {
     if (isOpen && spot) {
+      stopPolling();
       setStep('form');
       setError('');
       setLogoFile(null);
@@ -52,6 +131,8 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
       setEmail('');
       setBidId(null);
       setUploadToken(null);
+      setFailReason('timeout');
+      setExpiresIn(null);
       const min = spot.currentBid > 0 ? spot.currentBid + 5 : spot.startingPrice;
       setBidAmount(min);
     }
@@ -94,12 +175,10 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
             displayType: 'overlay',
             onEvent: (event) => {
               if (event.event_type === 'checkout.closed') {
-                // Proceed to logo step — webhook confirms payment in background
+                // Overlay closed — poll to verify actual payment status
                 if (data.bidId && data.uploadToken) {
-                  setBidId(data.bidId);
-                  setUploadToken(data.uploadToken);
-                  setStep('logo');
-                  onConfirmed();
+                  setStep('confirming');
+                  startPolling(data.bidId, data.uploadToken);
                 }
               }
             },
@@ -143,10 +222,8 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
         integration,
         payload: { bidId: data.bidId },
         validated: () => {
-          setBidId(data.bidId);
-          setUploadToken(data.uploadToken);
-          setStep('logo');
-          onConfirmed();
+          setStep('confirming');
+          startPolling(data.bidId, data.uploadToken);
         },
         closed: () => {
           // User closed widget without completing — stay on form so they can retry
@@ -233,6 +310,12 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
                 <p className="text-[13px] text-[var(--red)] bg-red-50 rounded-lg px-3 py-2 mt-4">{error}</p>
               )}
 
+              {bidId && expiresIn !== null && expiresIn > 0 && (
+                <p className="text-[13px] text-[var(--ink-3)] text-center mt-3">
+                  Pending bid expires in {Math.ceil(expiresIn / 60000)}m
+                </p>
+              )}
+
               <div className="flex gap-3 mt-5">
                 <button
                   type="button"
@@ -258,24 +341,58 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
             </form>
           )}
 
-          {/* Card — DoDo overlay is open, show waiting state */}
-          {step === 'card' && (
+          {/* Confirming — polling for payment verification */}
+          {step === 'confirming' && (
             <div className="text-center py-8">
-              <div className="w-14 h-14 rounded-full bg-[var(--surface)] flex items-center justify-center mx-auto mb-4">
+              <div className="w-14 h-14 rounded-full bg-[var(--surface)] flex items-center justify-center mx-auto mb-4 animate-pulse">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="2" y="5" width="20" height="14" rx="2" />
-                  <line x1="2" y1="10" x2="22" y2="10" />
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12,6 12,12 16,14" />
                 </svg>
               </div>
-              <h3 className="text-[20px] font-bold text-[var(--ink)]">Complete payment</h3>
-              <p className="text-[14px] text-[var(--ink-3)] mt-2">Finish your payment in the checkout overlay. Once confirmed, you can upload your logo.</p>
+              <h3 className="text-[20px] font-bold text-[var(--ink)]">Verifying payment</h3>
+              <p className="text-[14px] text-[var(--ink-3)] mt-2">Waiting for payment confirmation. This usually takes a few seconds.</p>
+            </div>
+          )}
 
+          {/* Failed — timeout, expired, or outbid */}
+          {step === 'failed' && (
+            <div className="text-center py-8">
+              <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--red)" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+              </div>
+              {failReason === 'timeout' && (
+                <>
+                  <h3 className="text-[20px] font-bold text-[var(--ink)]">Payment not confirmed yet</h3>
+                  <p className="text-[14px] text-[var(--ink-3)] mt-2">If you completed the payment, it may take a few minutes. You can wait or try again.</p>
+                </>
+              )}
+              {failReason === 'expired' && (
+                <>
+                  <h3 className="text-[20px] font-bold text-[var(--ink)]">Bid expired</h3>
+                  <p className="text-[14px] text-[var(--ink-3)] mt-2">This bid has expired. Place a new bid to continue.</p>
+                </>
+              )}
+              {failReason === 'outbid' && (
+                <>
+                  <h3 className="text-[20px] font-bold text-[var(--ink)]">Spot taken</h3>
+                  <p className="text-[14px] text-[var(--ink-3)] mt-2">This spot was taken by another bidder. Try a different spot.</p>
+                </>
+              )}
               <button
                 type="button"
-                onClick={() => setStep('form')}
-                className="mt-6 rounded-full border border-[var(--hairline)] px-6 py-2.5 text-[14px] font-medium hover:border-[var(--ink-3)] transition-colors"
+                onClick={() => {
+                  if (failReason === 'outbid') {
+                    onClose();
+                  } else {
+                    setBidId(null);
+                    setUploadToken(null);
+                    setStep('form');
+                  }
+                }}
+                className="mt-6 rounded-full bg-[var(--accent)] text-white px-6 py-2.5 text-[14px] font-medium hover:bg-[var(--accent-hover)] transition-colors"
               >
-                Back
+                Try Again
               </button>
             </div>
           )}
