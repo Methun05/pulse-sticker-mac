@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
     }
 
     const parsedAmount = typeof bidAmount === 'number' ? bidAmount : Number(bidAmount);
-    if (!Number.isInteger(parsedAmount) || parsedAmount < 5) {
+    if (!Number.isFinite(parsedAmount) || !Number.isInteger(parsedAmount) || parsedAmount < 5) {
       return NextResponse.json(
         { success: false, error: 'Bid must be a whole-dollar amount of at least $5' },
         { status: 400 }

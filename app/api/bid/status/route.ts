@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Build refund info for rejected payments
-    let refundInfo: { message: string; refundWallet?: string } | undefined;
+    let refundInfo: { message: string } | undefined;
     if (status === 'REJECTED' && bid.payment) {
       const isFiat = bid.payment.chainId === 0;
       if (isFiat) {
@@ -63,7 +63,6 @@ export async function GET(request: NextRequest) {
       } else {
         refundInfo = {
           message: 'For crypto refunds, please contact us on X @methaboron',
-          refundWallet: bid.payment.walletAddress || undefined,
         };
       }
     }

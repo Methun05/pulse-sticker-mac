@@ -67,6 +67,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'File content is not a supported image' }, { status: 400 });
     }
 
+    // Reject polyglot files: scan for embedded HTML/script tags in binary content
+    const textSample = new TextDecoder('ascii', { fatal: false }).decode(bytes);
+    if (/<script|<svg|<html|<iframe|javascript:/i.test(textSample)) {
+      return NextResponse.json({ success: false, error: 'File contains disallowed content' }, { status: 400 });
+    }
+
     const mimeMap: Record<string, string> = { png: 'image/png', jpg: 'image/jpeg', webp: 'image/webp' };
     const base64 = Buffer.from(bytes).toString('base64');
     const dataUrl = `data:${mimeMap[extension]};base64,${base64}`;

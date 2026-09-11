@@ -34,7 +34,10 @@ interface MemEntry { count: number; resetAt: number }
 const memStore = new Map<string, MemEntry>();
 
 function getIp(request: NextRequest): string {
+  // Prefer request.ip (set by Vercel, cannot be spoofed by client)
+  // Fall back to headers only for local dev where request.ip is undefined
   return (
+    request.ip ||
     request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
     request.headers.get('x-real-ip') ||
     'unknown'

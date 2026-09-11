@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { timingSafeEqual } from 'crypto';
+import { timingSafeEqual, createHash } from 'crypto';
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
-/** Timing-safe string comparison */
+/** Timing-safe string comparison using fixed-length hashes to prevent length leakage */
 function safeCompare(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-  return timingSafeEqual(Buffer.from(a), Buffer.from(b));
+  const hashA = createHash('sha256').update(a).digest();
+  const hashB = createHash('sha256').update(b).digest();
+  return timingSafeEqual(hashA, hashB);
 }
 
 /** Check Authorization: Bearer header against ADMIN_PASSWORD env var */
