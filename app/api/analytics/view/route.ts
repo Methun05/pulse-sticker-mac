@@ -5,7 +5,7 @@ import { rateLimit } from '@/lib/rate-limit';
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
-  const rl = rateLimit(request, { maxRequests: 30, windowMs: 60_000, prefix: 'analytics' });
+  const rl = await rateLimit(request, { maxRequests: 30, windowMs: 60_000, prefix: 'analytics' });
   if (rl) return rl;
 
   try {

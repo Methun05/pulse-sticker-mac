@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyWebhook } from '@/lib/dodo';
+import { verifyWebhook, refundPayment } from '@/lib/dodo';
 import { ensureDatabase } from '@/lib/db';
 import { confirmBidTransaction } from '@/lib/confirm-bid';
 
@@ -34,6 +34,10 @@ export async function POST(request: NextRequest) {
   const bidId = metadata?.bidId;
   const dodoPaymentId = data?.payment_id as string | undefined;
 
+  // Extract actual charged amount (cents → dollars)
+  const totalAmountCents = typeof data?.total_amount === 'number' ? data.total_amount : 0;
+  const dollarAmount = totalAmountCents / 100;
+
   if (!bidId) {
     console.error('[DoDo webhook] Missing bidId in metadata');
     return NextResponse.json({ received: true, error: 'Missing bidId' });
@@ -46,7 +50,7 @@ export async function POST(request: NextRequest) {
     txHash: dodoPaymentId || `dodo_${bidId}`,
     chainId: 0,
     token: 'FIAT',
-    tokenAmount: String(0),
+    tokenAmount: String(dollarAmount),
     depositAddress: '',
     walletAddress: '',
   });
@@ -60,7 +64,10 @@ export async function POST(request: NextRequest) {
     console.warn(
       `[DoDo webhook] Amount mismatch for bid ${result.bidId}: expected $${result.expected}, received $${result.received}`
     );
-    return NextResponse.json({ received: true, refundNeeded: true });
+    if (dodoPaymentId) {
+      await refundPayment(dodoPaymentId, `Amount mismatch: expected $${result.expected}, received $${result.received}`);
+    }
+    return NextResponse.json({ received: true, refunded: true });
   }
 
   if ('alreadyConfirmed' in result) {
@@ -68,8 +75,11 @@ export async function POST(request: NextRequest) {
   }
 
   if ('outbidNoSpot' in result) {
-    console.warn(`[DoDo webhook] Outbid, no free spot for bid ${result.bidId} ($${result.amount}) — refund needed`);
-    return NextResponse.json({ received: true, refundNeeded: true });
+    console.warn(`[DoDo webhook] Outbid, no free spot for bid ${result.bidId} ($${result.amount}) — auto-refunding`);
+    if (dodoPaymentId) {
+      await refundPayment(dodoPaymentId, `All spots taken, bid ${result.bidId} refunded`);
+    }
+    return NextResponse.json({ received: true, refunded: true });
   }
 
   const logExtra = result.reassigned ? ` (reassigned to Spot #${result.newSpotNumber})` : '';

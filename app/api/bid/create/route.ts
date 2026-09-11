@@ -4,7 +4,7 @@ import { db, ensureDatabase, BID_EXPIRY_MS } from '@/lib/db';
 import { rateLimit } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
-  const rl = rateLimit(request, { maxRequests: 10, windowMs: 60_000, prefix: 'bid-create' });
+  const rl = await rateLimit(request, { maxRequests: 10, windowMs: 60_000, prefix: 'bid-create' });
   if (rl) return rl;
 
   try {

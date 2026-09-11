@@ -4,7 +4,7 @@ import { isAuthorized, unauthorizedResponse } from '@/lib/auth';
 import { rateLimit } from '@/lib/rate-limit';
 
 export async function GET(request: NextRequest) {
-  const rl = rateLimit(request, { maxRequests: 30, windowMs: 60_000, prefix: 'admin' });
+  const rl = await rateLimit(request, { maxRequests: 30, windowMs: 60_000, prefix: 'admin' });
   if (rl) return rl;
 
   if (!isAuthorized(request)) return unauthorizedResponse();
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const rl = rateLimit(request, { maxRequests: 10, windowMs: 60_000, prefix: 'admin' });
+  const rl = await rateLimit(request, { maxRequests: 10, windowMs: 60_000, prefix: 'admin' });
   if (rl) return rl;
 
   if (!isAuthorized(request)) return unauthorizedResponse();

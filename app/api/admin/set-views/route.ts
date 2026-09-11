@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 // Changed from GET to POST — state mutation must not be on GET
 export async function POST(request: NextRequest) {
-  const rl = rateLimit(request, { maxRequests: 10, windowMs: 60_000, prefix: 'admin-views' });
+  const rl = await rateLimit(request, { maxRequests: 10, windowMs: 60_000, prefix: 'admin-views' });
   if (rl) return rl;
 
   if (!isAuthorized(request)) return unauthorizedResponse();

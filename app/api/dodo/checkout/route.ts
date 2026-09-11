@@ -4,7 +4,7 @@ import { rateLimit } from '@/lib/rate-limit';
 import { createCheckoutSession } from '@/lib/dodo';
 
 export async function POST(request: NextRequest) {
-  const rl = rateLimit(request, { maxRequests: 10, windowMs: 60_000, prefix: 'dodo-checkout' });
+  const rl = await rateLimit(request, { maxRequests: 10, windowMs: 60_000, prefix: 'dodo-checkout' });
   if (rl) return rl;
 
   try {

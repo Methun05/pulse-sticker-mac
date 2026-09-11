@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 // Changed from GET to POST — destructive actions must not be on GET
 export async function POST(request: NextRequest) {
-  const rl = rateLimit(request, { maxRequests: 3, windowMs: 60_000, prefix: 'admin-reset' });
+  const rl = await rateLimit(request, { maxRequests: 3, windowMs: 60_000, prefix: 'admin-reset' });
   if (rl) return rl;
 
   if (!isAuthorized(request)) return unauthorizedResponse();

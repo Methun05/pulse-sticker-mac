@@ -14,7 +14,7 @@ function imageExtension(bytes: Uint8Array): string | null {
 }
 
 export async function POST(request: NextRequest) {
-  const rl = rateLimit(request, { maxRequests: 10, windowMs: 60_000, prefix: 'logo-upload' });
+  const rl = await rateLimit(request, { maxRequests: 10, windowMs: 60_000, prefix: 'logo-upload' });
   if (rl) return rl;
 
   try {

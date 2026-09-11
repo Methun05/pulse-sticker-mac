@@ -52,44 +52,43 @@ export async function confirmBidTransaction(params: {
       return { error: 'Bid has expired', status: 400 };
     }
 
-    // Verify paid amount matches bid amount (skip for fiat — processor handles that)
-    if (token !== 'FIAT') {
-      const paidAmount = parseFloat(tokenAmount);
-      const minAcceptable = bid.amount * 0.98; // 2% tolerance for fees/slippage
+    // Verify paid amount matches bid amount
+    const paidAmount = parseFloat(tokenAmount);
+    const minAcceptable = bid.amount * 0.98; // 2% tolerance for fees/slippage
 
-      if (isNaN(paidAmount) || paidAmount < minAcceptable) {
-        console.warn(
-          `[confirmBid] Amount mismatch: bid ${bidId} expected $${bid.amount}, received ${tokenAmount} (min $${minAcceptable.toFixed(2)})`
-        );
+    if (!isNaN(paidAmount) && paidAmount > 0 && paidAmount < minAcceptable) {
+      const isFiat = chainId === 0;
+      console.warn(
+        `[confirmBid] Amount mismatch: bid ${bidId} expected $${bid.amount}, received ${tokenAmount} (min $${minAcceptable.toFixed(2)})`
+      );
 
-        // Create REJECTED payment for paper trail (crypto — manual refund needed)
-        await tx.payment.create({
-          data: {
-            bidId: bid.id,
-            txHash,
-            chainId,
-            token,
-            tokenAmount,
-            usdAmount: bid.amount,
-            depositAddress,
-            walletAddress,
-            status: 'REJECTED',
-            refundStatus: 'PENDING',
-            confirmedAt: new Date(),
-          },
-        });
+      await tx.payment.create({
+        data: {
+          bidId: bid.id,
+          txHash,
+          chainId,
+          token,
+          tokenAmount,
+          usdAmount: bid.amount,
+          depositAddress,
+          walletAddress,
+          status: 'REJECTED',
+          refundStatus: 'PENDING',
+          confirmedAt: new Date(),
+        },
+      });
 
-        console.warn(
-          `[confirmBid] REJECTED (amount mismatch) bid ${bid.id} ($${bid.amount}) — refund manual (crypto, sender: ${walletAddress})`
-        );
+      console.warn(
+        `[confirmBid] REJECTED (amount mismatch) bid ${bid.id} ($${bid.amount}) — ` +
+        `refund ${isFiat ? 'auto (fiat)' : `manual (crypto, sender: ${walletAddress})`}`
+      );
 
-        await tx.bid.update({
-          where: { id: bid.id },
-          data: { status: 'REJECTED' },
-        });
+      await tx.bid.update({
+        where: { id: bid.id },
+        data: { status: 'REJECTED' },
+      });
 
-        return { amountMismatch: true, bidId: bid.id, expected: bid.amount, received: paidAmount || 0 };
-      }
+      return { amountMismatch: true, bidId: bid.id, expected: bid.amount, received: paidAmount };
     }
 
     // Lock the spot row to prevent concurrent confirmations (SELECT FOR UPDATE)

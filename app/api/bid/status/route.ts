@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 const EXPIRY_MS = BID_EXPIRY_MS;
 
 export async function GET(request: NextRequest) {
-  const rl = rateLimit(request, { maxRequests: 30, windowMs: 60_000, prefix: 'bid-status' });
+  const rl = await rateLimit(request, { maxRequests: 30, windowMs: 60_000, prefix: 'bid-status' });
   if (rl) return rl;
 
   try {

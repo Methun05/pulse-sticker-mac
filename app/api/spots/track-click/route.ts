@@ -3,7 +3,7 @@ import { db, ensureDatabase } from '@/lib/db';
 import { rateLimit } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
-  const rl = rateLimit(request, { maxRequests: 30, windowMs: 60_000, prefix: 'track-click' });
+  const rl = await rateLimit(request, { maxRequests: 30, windowMs: 60_000, prefix: 'track-click' });
   if (rl) return rl;
 
   try {

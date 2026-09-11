@@ -33,3 +33,15 @@ export function verifyWebhook(body: string, headers: Record<string, string>) {
   const wh = new Webhook(secret);
   return wh.verify(body, headers);
 }
+
+export async function refundPayment(paymentId: string, reason: string): Promise<void> {
+  try {
+    await dodo.refunds.create({
+      payment_id: paymentId,
+      reason,
+    });
+    console.log(`[DoDo refund] Initiated refund for payment ${paymentId}: ${reason}`);
+  } catch (err) {
+    console.error(`[DoDo refund] Failed to refund payment ${paymentId}:`, err);
+  }
+}
