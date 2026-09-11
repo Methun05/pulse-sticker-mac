@@ -90,7 +90,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
         // Initialize DoDo overlay SDK once
         if (!dodoInitialized.current) {
           DodoCheckout.Initialize({
-            mode: 'live',
+            mode: 'test',
             displayType: 'overlay',
             onEvent: (event) => {
               if (event.event_type === 'checkout.closed') {
