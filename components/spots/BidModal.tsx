@@ -173,13 +173,21 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
           DodoCheckout.Initialize({
             mode: 'test',
             displayType: 'overlay',
-            onEvent: (event) => {
+            onEvent: async (event) => {
               if (event.event_type === 'checkout.closed') {
-                // Overlay closed — poll to verify actual payment status
-                if (data.bidId && data.uploadToken) {
-                  setStep('confirming');
-                  startPolling(data.bidId, data.uploadToken);
-                }
+                // Quick check if payment already confirmed by webhook
+                try {
+                  const statusRes = await fetch(`/api/bid/status?bidId=${data.bidId}`);
+                  const statusData = await statusRes.json();
+                  if (statusData.status === 'CONFIRMED') {
+                    setBidId(data.bidId);
+                    setUploadToken(data.uploadToken);
+                    onConfirmed();
+                    setStep('logo');
+                    return;
+                  }
+                } catch { /* ignore */ }
+                // Not confirmed — go back to form so user can retry or switch to crypto
               }
             },
           });
@@ -352,6 +360,13 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
               </div>
               <h3 className="text-[20px] font-bold text-[var(--ink)]">Verifying payment</h3>
               <p className="text-[14px] text-[var(--ink-3)] mt-2">Waiting for payment confirmation. This usually takes a few seconds.</p>
+              <button
+                type="button"
+                onClick={() => { stopPolling(); setStep('form'); }}
+                className="mt-6 rounded-full border border-[var(--hairline)] px-6 py-2.5 text-[14px] font-medium hover:border-[var(--ink-3)] transition-colors"
+              >
+                Back
+              </button>
             </div>
           )}
 
