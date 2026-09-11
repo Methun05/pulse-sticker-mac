@@ -52,6 +52,22 @@ export async function GET(request: NextRequest) {
       status = 'REJECTED';
     }
 
+    // Build refund info for rejected payments
+    let refundInfo: { message: string; refundWallet?: string } | undefined;
+    if (status === 'REJECTED' && bid.payment) {
+      const isFiat = bid.payment.chainId === 0;
+      if (isFiat) {
+        refundInfo = {
+          message: 'Your payment will be automatically refunded within 5-7 business days',
+        };
+      } else {
+        refundInfo = {
+          message: 'For crypto refunds, please contact us on X @methaboron',
+          refundWallet: bid.payment.walletAddress || undefined,
+        };
+      }
+    }
+
     return NextResponse.json({
       status,
       spotNumber: bid.spot.number,
@@ -59,6 +75,7 @@ export async function GET(request: NextRequest) {
       brandName: bid.brandName,
       expired: status === 'EXPIRED',
       expiresIn: status === 'AWAITING_PAYMENT' ? Math.max(0, EXPIRY_MS - ageMs) : undefined,
+      refundInfo,
     });
   } catch (error: unknown) {
     console.error('Error fetching bid status:', error);

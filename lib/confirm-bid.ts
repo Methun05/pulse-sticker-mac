@@ -3,6 +3,7 @@ import { db, BID_EXPIRY_MS } from '@/lib/db';
 export type ConfirmResult =
   | { alreadyConfirmed: true }
   | { error: string; status: number }
+  | { amountMismatch: true; bidId: string; expected: number; received: number }
   | { outbidNoSpot: true; bidId: string; amount: number }
   | {
       confirmed: true;
@@ -51,6 +52,46 @@ export async function confirmBidTransaction(params: {
       return { error: 'Bid has expired', status: 400 };
     }
 
+    // Verify paid amount matches bid amount (skip for fiat — processor handles that)
+    if (token !== 'FIAT') {
+      const paidAmount = parseFloat(tokenAmount);
+      const minAcceptable = bid.amount * 0.98; // 2% tolerance for fees/slippage
+
+      if (isNaN(paidAmount) || paidAmount < minAcceptable) {
+        console.warn(
+          `[confirmBid] Amount mismatch: bid ${bidId} expected $${bid.amount}, received ${tokenAmount} (min $${minAcceptable.toFixed(2)})`
+        );
+
+        // Create REJECTED payment for paper trail (crypto — manual refund needed)
+        await tx.payment.create({
+          data: {
+            bidId: bid.id,
+            txHash,
+            chainId,
+            token,
+            tokenAmount,
+            usdAmount: bid.amount,
+            depositAddress,
+            walletAddress,
+            status: 'REJECTED',
+            refundStatus: 'PENDING',
+            confirmedAt: new Date(),
+          },
+        });
+
+        console.warn(
+          `[confirmBid] REJECTED (amount mismatch) bid ${bid.id} ($${bid.amount}) — refund manual (crypto, sender: ${walletAddress})`
+        );
+
+        await tx.bid.update({
+          where: { id: bid.id },
+          data: { status: 'REJECTED' },
+        });
+
+        return { amountMismatch: true, bidId: bid.id, expected: bid.amount, received: paidAmount || 0 };
+      }
+    }
+
     // Lock the spot row to prevent concurrent confirmations (SELECT FOR UPDATE)
     await tx.$queryRaw`SELECT id FROM "Spot" WHERE id = ${bid.spotId} FOR UPDATE`;
     // Re-read spot with fresh data after acquiring lock
@@ -71,49 +112,74 @@ export async function confirmBidTransaction(params: {
         `[confirmBid] Bid ${bid.id}: amount $${bid.amount} <= current $${bid.spot.currentBid} on Spot #${bid.spot.number}, looking for free spot`
       );
 
-      // Find best available free spot they can afford
-      const freeSpot = await tx.spot.findFirst({
-        where: {
-          boardId: targetBoardId,
-          status: 'AVAILABLE',
-          startingPrice: { lte: bid.amount },
-        },
-        orderBy: [{ startingPrice: 'desc' }, { number: 'asc' }],
-      });
+      // Find and atomically claim a free spot.
+      // Loop because another transaction may claim the spot between findFirst and updateMany.
+      let claimedSpot: { id: string; number: number } | null = null;
+      const alreadyTriedIds: string[] = [];
 
-      if (!freeSpot) {
-        // No free spot available — create REJECTED payment for paper trail
-        await tx.payment.create({
-          data: {
-            bidId: bid.id,
-            txHash,
-            chainId,
-            token,
-            tokenAmount,
-            usdAmount: bid.amount,
-            depositAddress,
-            walletAddress,
-            status: 'REJECTED',
-            confirmedAt: new Date(),
+      while (!claimedSpot) {
+        const freeSpot = await tx.spot.findFirst({
+          where: {
+            boardId: targetBoardId,
+            status: 'AVAILABLE',
+            startingPrice: { lte: bid.amount },
+            id: { notIn: alreadyTriedIds },
           },
+          orderBy: [{ startingPrice: 'desc' }, { number: 'asc' }],
         });
 
-        console.warn(`[confirmBid] No free spot for outbid bid ${bid.id} ($${bid.amount})`);
-        return { outbidNoSpot: true, bidId: bid.id, amount: bid.amount };
+        if (!freeSpot) {
+          // No free spot available — create REJECTED payment for paper trail
+          const isFiat = chainId === 0;
+          await tx.payment.create({
+            data: {
+              bidId: bid.id,
+              txHash,
+              chainId,
+              token,
+              tokenAmount,
+              usdAmount: bid.amount,
+              depositAddress,
+              walletAddress,
+              status: 'REJECTED',
+              refundStatus: 'PENDING',
+              confirmedAt: new Date(),
+            },
+          });
+
+          console.warn(
+            `[confirmBid] No free spot for outbid bid ${bid.id} ($${bid.amount}) — ` +
+            `refund ${isFiat ? 'auto (fiat)' : `manual (crypto, sender: ${walletAddress})`}`
+          );
+          return { outbidNoSpot: true, bidId: bid.id, amount: bid.amount };
+        }
+
+        // Atomically claim: only succeeds if spot is still AVAILABLE
+        const claimed = await tx.spot.updateMany({
+          where: { id: freeSpot.id, status: 'AVAILABLE' },
+          data: { status: 'OCCUPIED' },
+        });
+
+        if (claimed.count > 0) {
+          claimedSpot = { id: freeSpot.id, number: freeSpot.number };
+        } else {
+          // Spot was claimed by another transaction — try next one
+          alreadyTriedIds.push(freeSpot.id);
+        }
       }
 
-      // Reassign bid to the free spot
+      // Reassign bid to the claimed spot
       await tx.bid.update({
         where: { id: bid.id },
-        data: { spotId: freeSpot.id },
+        data: { spotId: claimedSpot.id },
       });
 
-      targetSpotId = freeSpot.id;
-      targetSpotNumber = freeSpot.number;
+      targetSpotId = claimedSpot.id;
+      targetSpotNumber = claimedSpot.number;
       reassigned = true;
 
       console.log(
-        `[confirmBid] Reassigned bid ${bid.id} from Spot #${bid.spot.number} to Spot #${freeSpot.number}`
+        `[confirmBid] Reassigned bid ${bid.id} from Spot #${bid.spot.number} to Spot #${claimedSpot.number}`
       );
     }
 

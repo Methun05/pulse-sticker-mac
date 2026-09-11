@@ -73,7 +73,8 @@ model Payment {
   usdAmount      Float // USD equivalent at time of payment
   depositAddress String // which of our addresses received it
   walletAddress  String // sender's wallet
-  status         String    @default("PENDING") // PENDING, CONFIRMED, FAILED
+  status         String    @default("PENDING") // PENDING, CONFIRMED, FAILED, REJECTED
+  refundStatus   String    @default("NONE") // NONE, PENDING, PROCESSED
   confirmedAt    DateTime?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt

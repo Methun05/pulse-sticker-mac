@@ -56,6 +56,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ received: true, error: result.error });
   }
 
+  if ('amountMismatch' in result) {
+    console.warn(
+      `[DoDo webhook] Amount mismatch for bid ${result.bidId}: expected $${result.expected}, received $${result.received}`
+    );
+    return NextResponse.json({ received: true, refundNeeded: true });
+  }
+
   if ('alreadyConfirmed' in result) {
     return NextResponse.json({ received: true });
   }

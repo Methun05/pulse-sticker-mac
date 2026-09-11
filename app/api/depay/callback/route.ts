@@ -54,6 +54,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: result.error }, { status: result.status });
   }
 
+  if ('amountMismatch' in result) {
+    console.warn(
+      `[DePay callback] Amount mismatch for bid ${result.bidId}: expected $${result.expected}, received $${result.received}`
+    );
+    // DePay expects 200 — payment was received but bid rejected, needs manual refund
+    const responseBody = JSON.stringify({});
+    const response = NextResponse.json({});
+    response.headers.set('x-signature', signResponse(responseBody));
+    return response;
+  }
+
   if ('alreadyConfirmed' in result) {
     const responseBody = JSON.stringify({});
     const response = NextResponse.json({});
