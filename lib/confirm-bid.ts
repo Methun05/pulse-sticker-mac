@@ -56,7 +56,8 @@ export async function confirmBidTransaction(params: {
     const paidAmount = parseFloat(tokenAmount);
     const minAcceptable = bid.amount * 0.98; // 2% tolerance for fees/slippage
 
-    if (!isNaN(paidAmount) && paidAmount > 0 && paidAmount < minAcceptable) {
+    // Reject if amount is missing, zero, negative, NaN, or below minimum
+    if (!Number.isFinite(paidAmount) || paidAmount <= 0 || paidAmount < minAcceptable) {
       const isFiat = chainId === 0;
       console.warn(
         `[confirmBid] Amount mismatch: bid ${bidId} expected $${bid.amount}, received ${tokenAmount} (min $${minAcceptable.toFixed(2)})`
