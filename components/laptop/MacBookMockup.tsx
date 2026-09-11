@@ -104,7 +104,7 @@ function SpotCell({
   return (
     <button
       onClick={() => onSelect(spot)}
-      className="group relative flex h-full w-full cursor-pointer flex-col items-center justify-center border border-dashed transition-all hover:border-black/25"
+      className="group relative flex h-full w-full cursor-pointer flex-col items-center justify-center border border-dashed transition-all duration-200 hover:border-black/25 hover:bg-black/[0.06] hover:scale-[1.04]"
       style={{
         borderRadius: radius,
         borderColor: 'rgba(0,0,0,0.1)',
