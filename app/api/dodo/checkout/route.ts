@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db, ensureDatabase } from '@/lib/db';
+import { db, ensureDatabase, BID_EXPIRY_MS } from '@/lib/db';
 import { rateLimit } from '@/lib/rate-limit';
 import { createCheckoutSession } from '@/lib/dodo';
 
@@ -24,9 +24,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Bid is not awaiting payment' }, { status: 400 });
     }
 
-    // Reject expired bids (30-minute window)
+    // Reject expired bids
     const ageMs = Date.now() - new Date(bid.createdAt).getTime();
-    if (ageMs > 30 * 60 * 1000) {
+    if (ageMs > BID_EXPIRY_MS) {
       return NextResponse.json({ error: 'Bid has expired' }, { status: 400 });
     }
 

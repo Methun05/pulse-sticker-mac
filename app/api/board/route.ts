@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db, ensureDatabase } from '@/lib/db';
+import { db, ensureDatabase, BID_EXPIRY_MS } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -54,6 +54,15 @@ export async function GET() {
     // Stats
     const occupiedCount = board.spots.filter(s => s.status === 'OCCUPIED').length;
     const totalBids = board.spots.reduce((sum, s) => sum + s.bidCount, 0);
+
+    // Clean up orphaned bids across all spots
+    db.bid.updateMany({
+      where: {
+        status: 'AWAITING_PAYMENT',
+        createdAt: { lt: new Date(Date.now() - BID_EXPIRY_MS) },
+      },
+      data: { status: 'EXPIRED' },
+    }).catch((err: unknown) => console.warn('Orphaned bid cleanup failed:', err));
 
     // Recent confirmed bids
     const recentBids = await db.bid.findMany({

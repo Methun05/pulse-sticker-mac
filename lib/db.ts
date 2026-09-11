@@ -24,6 +24,8 @@ if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.prisma = db;
 }
 
+export const BID_EXPIRY_MS = 15 * 60 * 1000; // 15 minutes
+
 let initPromise: Promise<void> | null = null;
 
 export async function ensureDatabase(): Promise<void> {

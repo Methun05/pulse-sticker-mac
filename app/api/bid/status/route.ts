@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db, ensureDatabase } from '@/lib/db';
+import { db, ensureDatabase, BID_EXPIRY_MS } from '@/lib/db';
 import { rateLimit } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
-const EXPIRY_MS = 30 * 60 * 1000; // 30 minutes
+const EXPIRY_MS = BID_EXPIRY_MS;
 
 export async function GET(request: NextRequest) {
   const rl = rateLimit(request, { maxRequests: 30, windowMs: 60_000, prefix: 'bid-status' });

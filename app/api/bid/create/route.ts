@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createHash, randomBytes } from 'crypto';
-import { db, ensureDatabase } from '@/lib/db';
+import { db, ensureDatabase, BID_EXPIRY_MS } from '@/lib/db';
 import { rateLimit } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
       where: {
         spotId: spot.id,
         status: 'AWAITING_PAYMENT',
-        createdAt: { lt: new Date(Date.now() - 30 * 60 * 1000) },
+        createdAt: { lt: new Date(Date.now() - BID_EXPIRY_MS) },
       },
       data: { status: 'EXPIRED' },
     });
@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
       success: true,
       bidId: bid.id,
       uploadToken,
-      expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+      expiresAt: new Date(Date.now() + BID_EXPIRY_MS).toISOString(),
       minBid,
     });
   } catch (error: unknown) {
