@@ -188,7 +188,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
           spotNumber: spot.number,
           bidAmount,
           brandName,
-          website: website || undefined,
+          website: website ? `https://${website}` : undefined,
           xHandle: xHandle || undefined,
           email: email || undefined,
         }),
@@ -328,12 +328,28 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
                   onChange={e => setBrandName(e.target.value)}
                 />
 
-                <FloatingInput
-                  label="Website"
-                  type="url"
-                  value={website}
-                  onChange={e => setWebsite(e.target.value)}
-                />
+                <div className="relative flex items-stretch">
+                  <span className="inline-flex items-center px-3.5 border border-r-0 rounded-l-xl bg-[var(--surface)] text-[13px] text-[var(--ink-3)] border-[var(--hairline)] select-none whitespace-nowrap">
+                    https://
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="yoursite.com"
+                    className="flex-1 px-3 py-4 border rounded-r-xl bg-transparent outline-none text-sm text-[var(--ink)] border-[var(--hairline)] focus:border-[var(--ink)] transition-colors"
+                    value={website}
+                    onChange={e => {
+                      let v = e.target.value;
+                      v = v.replace(/^https?:\/\//i, '');
+                      setWebsite(v);
+                    }}
+                    onPaste={e => {
+                      e.preventDefault();
+                      let v = e.clipboardData.getData('text').trim();
+                      v = v.replace(/^https?:\/\//i, '');
+                      setWebsite(v);
+                    }}
+                  />
+                </div>
 
                 <FloatingInput
                   label="Email (optional)"

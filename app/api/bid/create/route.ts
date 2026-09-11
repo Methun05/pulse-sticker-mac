@@ -39,13 +39,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (normalizedWebsite && !/^https?:\/\//i.test(normalizedWebsite)) {
-      return NextResponse.json(
-        { success: false, error: 'Website must start with http:// or https://' },
-        { status: 400 }
-      );
-    }
-    if (normalizedWebsite.length > 2_048) {
+    // Auto-prepend https:// if user sent a bare domain
+    const fullWebsite = normalizedWebsite && !/^https?:\/\//i.test(normalizedWebsite)
+      ? `https://${normalizedWebsite}`
+      : normalizedWebsite;
+    if (fullWebsite.length > 2_048) {
       return NextResponse.json(
         { success: false, error: 'Website URL is too long' },
         { status: 400 }
@@ -136,7 +134,7 @@ export async function POST(request: NextRequest) {
         spotId: spot.id,
         walletAddress: '', // set later when payment method chosen
         brandName,
-        website: normalizedWebsite || null,
+        website: fullWebsite || null,
         email: normalizedEmail || null,
         xHandle: cleanXHandle || null,
         uploadTokenHash,
