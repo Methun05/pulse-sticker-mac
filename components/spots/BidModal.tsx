@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { SpotData } from '@/components/laptop/MacBookMockup';
 import { LogoUpload } from '@/components/ui/LogoUpload';
 import { FloatingInput } from '@/components/ui/FloatingInput';
 import { Stepper } from '@/components/ui/Stepper';
+import { DodoPayments as DodoCheckout } from 'dodopayments-checkout';
 
 declare global {
   interface Window {
@@ -37,6 +38,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
   // Bid state (set after form submit)
   const [bidId, setBidId] = useState<string | null>(null);
   const [uploadToken, setUploadToken] = useState<string | null>(null);
+  const dodoInitialized = useRef(false);
 
   // Reset on open
   useEffect(() => {
@@ -85,7 +87,43 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
       setUploadToken(data.uploadToken);
 
       if (target === 'card') {
-        setStep('card');
+        // Initialize DoDo overlay SDK once
+        if (!dodoInitialized.current) {
+          DodoCheckout.Initialize({
+            mode: 'test',
+            displayType: 'overlay',
+            onEvent: (event) => {
+              if (event.event_type === 'checkout.closed') {
+                // Proceed to logo step — webhook confirms payment in background
+                if (data.bidId && data.uploadToken) {
+                  setBidId(data.bidId);
+                  setUploadToken(data.uploadToken);
+                  setStep('logo');
+                  onConfirmed();
+                }
+              }
+            },
+          });
+          dodoInitialized.current = true;
+        }
+
+        // Create DoDo checkout session
+        try {
+          const checkoutRes = await fetch('/api/dodo/checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ bidId: data.bidId }),
+          });
+          const checkoutData = await checkoutRes.json();
+          if (!checkoutData.checkout_url) {
+            setError(checkoutData.error || 'Failed to create checkout session');
+            return;
+          }
+          // Open DoDo overlay
+          DodoCheckout.Checkout.open({ checkoutUrl: checkoutData.checkout_url });
+        } catch {
+          setError('Failed to start fiat checkout. Please try again.');
+        }
         return;
       }
 
@@ -220,7 +258,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
             </form>
           )}
 
-          {/* Card (coming soon) */}
+          {/* Card — DoDo overlay is open, show waiting state */}
           {step === 'card' && (
             <div className="text-center py-8">
               <div className="w-14 h-14 rounded-full bg-[var(--surface)] flex items-center justify-center mx-auto mb-4">
@@ -229,8 +267,8 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
                   <line x1="2" y1="10" x2="22" y2="10" />
                 </svg>
               </div>
-              <h3 className="text-[20px] font-bold text-[var(--ink)]">Card payments coming soon</h3>
-              <p className="text-[14px] text-[var(--ink-3)] mt-2">We're working on adding card payments. For now, you can pay with crypto.</p>
+              <h3 className="text-[20px] font-bold text-[var(--ink)]">Complete payment</h3>
+              <p className="text-[14px] text-[var(--ink-3)] mt-2">Finish your payment in the checkout overlay. Once confirmed, you can upload your logo.</p>
 
               <button
                 type="button"

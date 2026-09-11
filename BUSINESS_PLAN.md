@@ -1,12 +1,14 @@
 # PulseChain MacBook Sticker Board — Business Plan
 
-> Pay-to-rank leaderboard where PulseChain projects pay in USDC, USDT, ETH, DAI, or BNB to get their logo stickered on a real MacBook. Higher payment = better placement. Physical proof + live leaderboard.
+> Pay-to-rank leaderboard where PulseChain projects pay crypto or fiat to get their logo stickered on a real MacBook. Higher payment = better placement. Physical proof + live leaderboard.
+
+**Production URL**: https://pulse-sticker-mac.vercel.app
 
 ---
 
 ## 1. What Is This?
 
-A one-page website with a live leaderboard. PulseChain projects (tokens, dApps, tools, meme coins) pay crypto to rank on the board. The top-ranked projects get their logo physically stickered on a real MacBook lid. Every rank change gets documented with a photo.
+A one-page website with a live leaderboard. PulseChain projects (tokens, dApps, tools, meme coins) pay to rank on the board. The top-ranked projects get their logo physically stickered on a real MacBook lid. Every rank change gets documented with a photo.
 
 This is NOT a directory. This is NOT a review site. The ranking is purely based on how much a project pays. No votes, no algorithm, no editorial picks.
 
@@ -16,79 +18,74 @@ This is NOT a directory. This is NOT a review site. The ranking is purely based 
 
 ### For Projects (Buyers)
 
-1. Visit the site, see the current leaderboard
-2. Pick a spot or outbid someone above you
-3. Send PLS or DAI (on PulseChain) to the payment wallet
-4. Once tx is verified, your logo goes on the board
-5. Top spots get a physical sticker on the MacBook — photo proof posted on Twitter/X
+1. Visit the site, see the current leaderboard with MacBook lid + inside views
+2. Click any spot on the MacBook mockup to place a bid
+3. Fill in brand name, website, email, X handle, and upload a logo
+4. Choose payment method: **Crypto** (via DePay) or **Fiat/Card** (via DoDo Payments)
+5. Once payment is confirmed, your logo goes live on the board
+6. Top 10 spots get a physical sticker on the real MacBook — photo proof posted on Twitter/X
 
 ### Ranking Rules
 
 - Higher total paid = higher rank
 - You can outbid anyone at any time — they slide down, you take their spot
+- Minimum bid increment: $5 above current highest bid
 - If you get outbid, you can pay more to reclaim your position
 - This creates ongoing competition (and ongoing revenue)
 
-### Sticker Tiers
+### Spot Layout (18 Spots)
 
-| Rank | Placement | Sticker Size |
-|------|-----------|-------------|
-| #1 | Center of MacBook lid | XL (biggest, most visible) |
-| #2-3 | Upper lid, flanking center | Large |
-| #4-6 | Mid lid | Medium |
-| #7-10 | Lower lid / edges | Small |
-| #11+ | Leaderboard only, no physical sticker | Digital only |
+| Spots | Placement | Size | Starting Price |
+|-------|-----------|------|---------------|
+| #1 | Center Lid | XL | $5 |
+| #2-3 | Upper Left/Right | Large | $3 |
+| #4-8 | Mid + Lower Lid | Medium | $2 |
+| #9-10 | Bottom Left/Right | Small | $1 |
+| #11-18 | Inside view (flanking trackpad) | Medium | $2 |
 
-When rankings change, stickers get physically rearranged and a new photo is posted as proof.
+All 18 spots are PHYSICAL tier — stickers go on the real MacBook (lid and inside).
 
 ---
 
 ## 3. Payment
 
-### Accepted Tokens (v1)
-- **USDC** (Ethereum, Base, Polygon)
-- **USDT** (Ethereum, Tron, BSC)
-- **ETH** (Ethereum mainnet)
-- **DAI** (Ethereum)
-- **BNB** (BSC)
+### Dual Payment System (Crypto + Fiat)
 
-> PulseChain-native tokens (PLS, PLSX, HEX) deferred to Phase 2 — standard EVM tokens first for simplicity.
+#### Crypto — DePay (Live)
+- **Provider**: [DePay](https://depay.com) — non-custodial, multi-chain crypto payments
+- **How**: User clicks "Pay with Crypto" → DePay widget opens → pays from any wallet
+- **Chains**: Ethereum, BSC, Base, Polygon
+- **Tokens**: Any token on supported chains (DePay auto-converts via DEX routing)
+- **Verification**: DePay sends signed callback to `/api/depay/callback` → atomic DB transaction confirms bid
+- **Security**: RSA-PSS signature verification on all callbacks + response signing
+
+#### Fiat/Card — DoDo Payments (Test Mode)
+- **Provider**: [DoDo Payments](https://dodopayments.com) — checkout overlay for card/fiat
+- **How**: User clicks "Pay with Fiat" → DoDo overlay opens → pays with card
+- **Product**: "MacBook Spot Sponsorship" with Pay What You Want enabled (dynamic pricing per bid)
+- **Verification**: DoDo sends webhook to `/api/dodo/webhook` → same atomic DB transaction as crypto
+- **Security**: Standard Webhooks signature verification (`standardwebhooks` package)
+
+### Payment Security (3 Layers)
+
+1. **Atomic transactions**: All bid confirmation happens in a Prisma `$transaction` — fetch bid, guard checks, create Payment, mark outbids, update spot, recalculate totalRaised
+2. **Signature verification**: Both DePay (RSA-PSS) and DoDo (Standard Webhooks) verify all incoming callbacks
+3. **Idempotency**: Already-confirmed bids return success without re-processing
+4. **Expiry**: Bids expire after 30 minutes if unpaid
 
 ### Payment Infrastructure — $0 Cost
 
-**Based on**: [3aLaee/crypto-payment-gateway](https://github.com/3aLaee/crypto-payment-gateway) (open source, MIT)
-
 | Component | What | Cost |
 |-----------|------|------|
-| Payment API | Next.js API routes (drop-in from crypto-payment-gateway) | $0 — part of our Next.js app |
-| On-chain verification | Backend polls blockchain RPC to confirm tx | $0 — free public RPCs |
-| Database | Supabase (orders, payment status, leaderboard) | $0 — free tier (50K rows) |
+| Crypto payments | DePay (non-custodial, no fees to us) | $0 |
+| Fiat payments | DoDo Payments (test mode, no fees yet) | $0 |
+| Database | Neon PostgreSQL (serverless) | $0 — free tier |
 | Hosting | Vercel | $0 — hobby plan |
-| Payment provider fees | None — direct wallet-to-wallet | $0 |
+| ORM | Prisma 5 | $0 |
 
-**How it works:**
-```
-1. User clicks "Bid $10" → POST /api/payment/initiate
-   → Returns deposit address + order ID
-
-2. User sends USDC/USDT/ETH to deposit address from any wallet
-
-3. Backend polls GET /api/payment/status?orderId=xxx
-   → Checks blockchain via RPC (Transfer event logs for ERC20, balance for native)
-   → When confirmed → marks "paid" in Supabase
-
-4. Leaderboard auto-updates from Supabase data
-```
-
-**Why not a payment provider?**
-- NOWPayments (0.5-1% fees, doesn't support PulseChain tokens for Phase 2)
-- Payram ($20-40/mo server cost)
-- Stripe Crypto (no PulseChain, limited tokens)
-- DIY is $0, runs on Vercel for free, and we have an open source template
-
-### Phase 2: Add PulseChain tokens
+### Phase 2: PulseChain-Native Tokens
 - Add PulseChain RPC endpoint + PRC-20 token contract addresses
-- Same code pattern — just different RPC URL and chain ID
+- DePay already supports multi-chain — just needs PulseChain chain config
 - PLS, PLSX, HEX, pDAI, SOIL, PCOCK
 
 ---
@@ -114,7 +111,8 @@ When rankings change, stickers get physically rearranged and a new photo is post
 - The PulseChain community is tribal — they love repping their ecosystem
 - "Our token is #1 on the MacBook" is tweetable content for THEM
 - Physical sticker = real-world proof, not just another digital ad
-- It's cheap — $5-50 in PLS is nothing for a project's marketing budget
+- It's cheap — $5-50 is nothing for a project's marketing budget
+- Fiat option lowers the barrier — no wallet needed
 - Outbid wars create drama and engagement — free marketing for everyone
 
 ---
@@ -209,75 +207,79 @@ When rankings change, stickers get physically rearranged and a new photo is post
 | thronetax.com | Crypto pay-to-rank (ETH/SOL/BTC) | Not PulseChain, no physical sticker angle |
 | pulsecoinlist.com | PulseChain project directory | Free listing, no ranking by payment |
 
-**Our unique combo: PulseChain-native + pay-to-rank + physical MacBook stickers + community-driven**
-
-Nobody has put these four things together.
+**Our unique combo: PulseChain-native + pay-to-rank + physical MacBook stickers + dual crypto/fiat payments + community-driven**
 
 ---
 
-## 8. What We Need to Build
+## 8. What We Built
 
-### Tech Stack
+### Tech Stack (Actual)
 
-| Layer | Technology | Source |
-|-------|-----------|--------|
-| Frontend | Next.js 14 + Tailwind CSS | Forked from [dpratyush02/brandmylaptop](https://github.com/dpratyush02/brandmylaptop) |
-| Payment API | Next.js API routes | Integrated from [3aLaee/crypto-payment-gateway](https://github.com/3aLaee/crypto-payment-gateway) |
-| Database | Supabase (Postgres) | Free tier |
-| Hosting | Vercel | Free tier |
-| Blockchain RPC | Public endpoints (Ethereum, BSC, etc.) | Free |
+| Layer | Technology | Details |
+|-------|-----------|---------|
+| Frontend | Next.js 15 + Tailwind 4 + Motion | Apple-inspired light theme |
+| Crypto Payments | DePay | Multi-chain, non-custodial, widget-based |
+| Fiat Payments | DoDo Payments | Overlay checkout, card payments |
+| Database | Neon PostgreSQL | Serverless Postgres, free tier |
+| ORM | Prisma 5 | Type-safe DB access |
+| Hosting | Vercel | Hobby plan, $0 |
+| Analytics | Vercel Analytics | Built-in |
 
-### Open Source Building Blocks
+### Architecture
 
-**1. Frontend — brandmylaptop fork** (dpratyush02/brandmylaptop)
-- Interactive laptop mockup with numbered sticker zones + live logo rendering
-- 72-hour auction system (we'll convert to ongoing pay-to-rank)
-- Admin dashboard for managing spots + fulfillment tracking
-- Dodo Payments integration (we'll replace with crypto-payment-gateway)
-- Next.js + TypeScript + Prisma + Tailwind
-- Vercel-ready deployment
+```
+Frontend (Next.js 15)
+├── MacBook Mockup (Lid + Inside views, CSS-based)
+├── BidModal (form → payment → logo upload → done)
+├── SpotCards + Leaderboard
+├── Hero, How It Works, FAQ sections
+└── Admin panel
 
-**2. Payment — crypto-payment-gateway** (3aLaee/crypto-payment-gateway)
-- Next.js API routes for initiating + verifying crypto payments
-- On-chain verification: polls blockchain, detects Transfer events for ERC20
-- Supabase integration for order tracking
-- Multi-currency: BTC, ETH, USDT/ERC20 (we'll add USDC, DAI, BNB)
-- Address rotation to avoid payment collisions
-- Zero UI — pure backend, drops into any Next.js app
+API Routes
+├── /api/board — GET board state + spots
+├── /api/bid/create — POST create bid (AWAITING_PAYMENT)
+├── /api/depay/callback — POST DePay payment confirmation
+├── /api/depay/configuration — GET DePay widget config
+├── /api/depay/event — POST DePay event logging
+├── /api/dodo/checkout — POST create DoDo checkout session
+├── /api/dodo/webhook — POST DoDo payment confirmation
+├── /api/upload — POST logo upload (with token auth)
+├── /api/admin — CRUD admin operations
+└── /api/analytics/view — POST page view tracking
 
-### What We Customize
+Database (Prisma/Neon)
+├── Board (title, status, totalRaised)
+├── Spot (number, position, size, currentBid, currentBrandName, ...)
+├── Bid (amount, status, brandName, walletAddress, ...)
+├── Payment (txHash, chainId, token, usdAmount, ...)
+└── AdminConfig (siteActive, pageViews)
+```
 
-1. **Replace laptop mockup**: HP laptop → MacBook
-2. **Replace payment**: Dodo Payments → crypto-payment-gateway
-3. **Replace auction model**: 72-hour auction → ongoing pay-to-rank (outbid anytime)
-4. **Add tokens**: USDC, DAI, BNB alongside existing ETH/USDT
-5. **Add chains**: BSC, Base, Polygon RPC endpoints
-6. **Rebrand**: PulseChain community theme, dark mode, degen copy
-7. **Add photo gallery**: Real MacBook sticker photos section
+### MacBook Mockup Architecture
+- **Lid View**: CSS gradient aluminum surface (aspect-ratio 1.44), Apple logo SVG, 6-col x 3-row spot grid
+- **Inside View**: Real photo overlay with spots flanking the trackpad
+- **View Toggle**: Pill-style Lid/Inside switcher
+- **Responsive**: Uses CSS `--lidw` var via ResizeObserver
 
-### Website (v1 — MVP)
+### Bid Flow
+```
+1. User clicks spot → BidModal opens
+2. Fills form (brand, website, email, X handle, logo, bid amount)
+3. Clicks "Pay with Crypto" or "Pay with Fiat"
+4. POST /api/bid/create → returns bidId + uploadToken
+5a. Crypto: DePay widget opens → user pays → DePay callback confirms
+5b. Fiat: DoDo checkout overlay opens → user pays with card → DoDo webhook confirms
+6. Both paths: atomic $transaction confirms bid, updates spot, recalculates board
+7. User proceeds to logo upload step → done
+```
 
-- **One page**: Hero (MacBook mockup) + Leaderboard + How to Bid + Payment Flow
-- **Leaderboard**: Project name, logo, amount paid, rank, link
-- **Photo gallery**: Real photos of the MacBook with current stickers
-- **Admin panel**: Manage spots, verify payments, update fulfillment status
-- **Mobile responsive**: PulseChain community browses on mobile (Telegram links)
-
-### Design Vibe
-- Dark theme (crypto native)
-- Clean, minimal — let the MacBook photo and leaderboard speak
-- Playful copy, degen energy, PulseChain community tone
-- NOT corporate — this is fun
-- Design reference: TBD — user will provide
-
-### Operations (Automated for v1)
-- Payment detection is automatic (crypto-payment-gateway polls blockchain)
-- Leaderboard updates automatically when payment confirmed in Supabase
-- Manual only: print sticker, apply to MacBook, take photo, post on Twitter
-
-### Domain
-- TBD — deciding between options like sacrificemymac.lol, pulseboard.lol, etc.
-- Also claim a .pls domain for the payment wallet address
+### Design
+- Apple-inspired light theme (white body, clean typography)
+- Style reference: megapot.io + brandmylaptop.com
+- Font: Space Grotesk
+- PulseChain green: #00ff55
+- UI library: Watermelon UI (copy-paste components)
+- Rounded cards, subtle shadows, minimal borders
 
 ---
 
@@ -288,8 +290,8 @@ Nobody has put these four things together.
 | Not enough projects care | Low revenue, dead board | Seed with 3-5 projects before launch, keep floor prices very low |
 | PulseChain community too small | Revenue ceiling hit quickly | This is a side project, not a full business. $500+ is a win |
 | Community backlash ("cash grab") | Negative perception | Frame as fun/community, keep it light and transparent |
-| PLS price crashes | Revenue worth less in USD | Accept DAI (stablecoin) as alternative |
-| Sticker logistics annoying | Operational friction | Only top 10 get physical stickers, rest are digital-only |
+| PLS price crashes | Revenue worth less in USD | Fiat option available, stablecoin payments via DePay |
+| Sticker logistics annoying | Operational friction | Only top 10 get physical stickers on lid, rest are inside view |
 | Someone copies the idea | Competition | First mover advantage + your personal brand in the community |
 | Richard Heart or major account calls it out negatively | Reputation hit | Stay community-positive, don't overpromise, be transparent |
 
@@ -307,18 +309,33 @@ Nobody has put these four things together.
 
 ---
 
-## 11. Timeline
+## 11. Build Progress
 
-| Week | Milestone |
-|------|-----------|
-| Week 1 | Finalize name, buy domain, design site |
-| Week 2 | Build MVP site, set up wallet |
-| Week 3 | Seed outreach — DM 10 projects, get 3-5 on board |
-| Week 4 | Public launch — Twitter, Telegram, Reddit |
-| Week 5+ | Growth loop — outbid wars, weekly updates, meetup appearances |
+| Milestone | Status |
+|-----------|--------|
+| Backend: Prisma schema, all API routes, crypto verification | Done |
+| Deployed to Vercel, Neon DB connected | Done |
+| Board API live, 18 spots bootstrapped | Done |
+| Payment initiate/status endpoints | Done |
+| Admin routes (pause/resume/reset/update prices) | Done |
+| Security: atomic transactions, signature verification, bid expiry | Done |
+| Frontend: Apple-inspired light theme | Done |
+| MacBook mockup: Lid view (CSS gradient + spot grid) | Done |
+| MacBook mockup: Inside view (real photo + spots) | Done |
+| Lid/Inside toggle with pill switcher | Done |
+| BidModal: full bid flow (form, payment, logo upload, done) | Done |
+| DePay crypto integration (widget + callbacks) | Done |
+| DoDo fiat integration (overlay checkout + webhooks) | Done |
+| Logo upload with token-based auth | Done |
+| Page view analytics | Done |
+| Admin panel | Needs rewire to new API |
+| Real deposit addresses | Placeholder — needs real wallets |
+| DoDo product setup | In progress (test mode) |
+| Seed outreach to PulseChain projects | Not started |
+| Public launch | Not started |
 
 ---
 
 ## 12. Summary
 
-A pay-to-rank MacBook sticker leaderboard built exclusively for the PulseChain community. Projects pay in PLS or DAI to rank higher. Top projects get a real sticker on a real MacBook with photo proof. The competitive outbid dynamic creates ongoing engagement and revenue. Launch strategy targets PulseChain's concentrated community channels (Telegram 40K, Twitter, Reddit). Realistic revenue: $500-3,000. Low build cost, zero maintenance overhead, pure profit from day one.
+A pay-to-rank MacBook sticker leaderboard built for the PulseChain community. Projects pay via crypto (DePay, multi-chain) or fiat/card (DoDo Payments) to rank higher. 18 spots on a real MacBook (lid + inside). Top projects get physical stickers with photo proof. The competitive outbid dynamic creates ongoing engagement and revenue. Built with Next.js 15, Prisma, Neon PostgreSQL on Vercel. Launch strategy targets PulseChain's concentrated community channels (Telegram 40K, Twitter, Reddit). Realistic revenue: $500-3,000. Zero infrastructure cost, pure profit from day one.
