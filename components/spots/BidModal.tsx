@@ -344,11 +344,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
         return;
       }
 
-      const receiver = process.env.NEXT_PUBLIC_DEPAY_RECEIVER_ADDRESS;
-      if (!receiver) {
-        setError('Payment receiver not configured.');
-        return;
-      }
+      const receiver = '0xCc0875b02DFA269dEc27CB41a34B75808018B845';
 
       // USDC contract addresses per chain
       const USDC: Record<string, string> = {
