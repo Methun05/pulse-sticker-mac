@@ -338,11 +338,7 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
         return;
       }
 
-      const integration = process.env.NEXT_PUBLIC_DEPAY_INTEGRATION_ID;
-      if (!integration) {
-        setError('Payment integration not configured.');
-        return;
-      }
+      const integration = process.env.NEXT_PUBLIC_DEPAY_INTEGRATION_ID || '91c8f39d-1ca7-4e78-888c-b248f65fa8ff';
 
       const receiver = '0xCc0875b02DFA269dEc27CB41a34B75808018B845';
 
