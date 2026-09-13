@@ -344,9 +344,29 @@ export function BidModal({ spot, isOpen, onClose, onConfirmed }: BidModalProps) 
         return;
       }
 
+      const receiver = process.env.NEXT_PUBLIC_DEPAY_RECEIVER_ADDRESS;
+      if (!receiver) {
+        setError('Payment receiver not configured.');
+        return;
+      }
+
+      // USDC contract addresses per chain
+      const USDC: Record<string, string> = {
+        ethereum: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+        bsc: '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d',
+        polygon: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359',
+        base: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+      };
+
       window.DePayWidgets.Payment({
         integration,
         payload: { bidId: data.bidId },
+        accept: Object.entries(USDC).map(([blockchain, token]) => ({
+          blockchain,
+          amount: bidAmount,
+          token,
+          receiver,
+        })),
         validated: () => {
           // DePay confirmed — start polling for webhook confirmation
           startPolling(data.bidId, data.uploadToken);
